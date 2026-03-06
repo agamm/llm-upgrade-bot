@@ -17,6 +17,7 @@ async function loadRealMap(): Promise<UpgradeMap> {
 
 /** Minimal upgrade map for unit tests */
 const testMap: UpgradeMap = {
+  // Native model IDs
   'gpt-4': { safe: null, major: 'gpt-4.1' },
   'gpt-4o-2024-05-13': { safe: 'gpt-4o-2024-08-06', major: 'gpt-4.1' },
   'gpt-3.5-turbo': { safe: null, major: 'gpt-4.1-mini' },
@@ -27,6 +28,14 @@ const testMap: UpgradeMap = {
     major: 'claude-sonnet-4-6',
   },
   'gemini-pro': { safe: null, major: 'gemini-2.5-pro' },
+  // OpenRouter-prefixed (provider/model)
+  'openai/gpt-4': { safe: null, major: 'openai/gpt-4.1' },
+  'anthropic/claude-3-opus-20240229': { safe: null, major: 'anthropic/claude-opus-4-6' },
+  'google/gemini-pro': { safe: null, major: 'google/gemini-2.5-pro' },
+  // AWS Bedrock-prefixed (provider.model-vN:M)
+  'anthropic.claude-3-opus-20240229-v1:0': { safe: null, major: 'anthropic.claude-opus-4-6-v1:0' },
+  // LiteLLM-prefixed (provider/provider-model)
+  'gemini/gemini-1.5-pro': { safe: null, major: 'gemini/gemini-2.5-pro' },
 }
 
 describe('scanFile', () => {
@@ -147,6 +156,54 @@ const x = "gpt-4"
       safeUpgrade: null,
       majorUpgrade: 'gpt-4.1',
     })
+  })
+
+  it('matches OpenRouter-prefixed model IDs and preserves prefix in upgrades', () => {
+    const content = 'model: "openai/gpt-4"\n'
+    const results = scanFile('config.yaml', content, testMap)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]).toEqual({
+      file: 'config.yaml',
+      line: 1,
+      column: 7,
+      matchedText: 'openai/gpt-4',
+      safeUpgrade: null,
+      majorUpgrade: 'openai/gpt-4.1',
+    })
+  })
+
+  it('matches Bedrock-prefixed model IDs (dot separator, version suffix)', () => {
+    const content = '{"modelId": "anthropic.claude-3-opus-20240229-v1:0"}\n'
+    const results = scanFile('config.json', content, testMap)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]?.matchedText).toBe('anthropic.claude-3-opus-20240229-v1:0')
+    expect(results[0]?.majorUpgrade).toBe('anthropic.claude-opus-4-6-v1:0')
+  })
+
+  it('matches LiteLLM-prefixed model IDs (provider/provider-model)', () => {
+    const content = "model = 'gemini/gemini-1.5-pro'\n"
+    const results = scanFile('app.py', content, testMap)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]?.matchedText).toBe('gemini/gemini-1.5-pro')
+    expect(results[0]?.majorUpgrade).toBe('gemini/gemini-2.5-pro')
+  })
+
+  it('does not confuse native and prefixed variants', () => {
+    const content = `primary = "gpt-4"
+openrouter = "openai/gpt-4"
+`
+    const results = scanFile('multi.py', content, testMap)
+
+    expect(results).toHaveLength(2)
+    // Native gets native upgrade
+    expect(results[0]?.matchedText).toBe('gpt-4')
+    expect(results[0]?.majorUpgrade).toBe('gpt-4.1')
+    // Prefixed gets prefixed upgrade
+    expect(results[1]?.matchedText).toBe('openai/gpt-4')
+    expect(results[1]?.majorUpgrade).toBe('openai/gpt-4.1')
   })
 
   it('finds models across all three quote styles in one file', () => {

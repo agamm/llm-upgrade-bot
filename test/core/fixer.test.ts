@@ -126,6 +126,44 @@ describe('computeEdits', () => {
     expect(edits[1]?.newText).toBe('gpt-4.1') // major fallback
   })
 
+  it('preserves OpenRouter prefix in upgrade target', () => {
+    const matches: ScanResult[] = [
+      {
+        file: 'config.yaml',
+        line: 1,
+        column: 7,
+        matchedText: 'openai/gpt-4',
+        safeUpgrade: null,
+        majorUpgrade: 'openai/gpt-4.1',
+      },
+    ]
+
+    const edits = computeEdits(matches)
+
+    expect(edits).toHaveLength(1)
+    expect(edits[0]?.oldText).toBe('openai/gpt-4')
+    expect(edits[0]?.newText).toBe('openai/gpt-4.1')
+  })
+
+  it('preserves Bedrock prefix in upgrade target', () => {
+    const matches: ScanResult[] = [
+      {
+        file: 'config.json',
+        line: 1,
+        column: 12,
+        matchedText: 'anthropic.claude-3-opus-20240229-v1:0',
+        safeUpgrade: null,
+        majorUpgrade: 'anthropic.claude-opus-4-6-v1:0',
+      },
+    ]
+
+    const edits = computeEdits(matches)
+
+    expect(edits).toHaveLength(1)
+    expect(edits[0]?.oldText).toBe('anthropic.claude-3-opus-20240229-v1:0')
+    expect(edits[0]?.newText).toBe('anthropic.claude-opus-4-6-v1:0')
+  })
+
   it('returns empty array for empty input', () => {
     expect(computeEdits([])).toEqual([])
   })
@@ -348,6 +386,51 @@ describe('applyFixes', () => {
 
     const updated = await readFile(filePath, 'utf-8')
     expect(updated).toBe('const MODELS = ["gpt-4.1", "gemini-2.5-pro"]\n')
+  })
+
+  it('replaces OpenRouter-prefixed model string in file', async () => {
+    const dir = await makeTmpDir()
+    const filePath = join(dir, 'config.yaml')
+    await writeFile(filePath, 'model: "openai/gpt-4"\n')
+
+    const edits: FileEdit[] = [
+      {
+        file: filePath,
+        line: 1,
+        column: 7,
+        oldText: 'openai/gpt-4',
+        newText: 'openai/gpt-4.1',
+      },
+    ]
+
+    await applyFixes(edits)
+
+    const updated = await readFile(filePath, 'utf-8')
+    expect(updated).toBe('model: "openai/gpt-4.1"\n')
+  })
+
+  it('replaces Bedrock-prefixed model string in file', async () => {
+    const dir = await makeTmpDir()
+    const filePath = join(dir, 'bedrock.json')
+    await writeFile(
+      filePath,
+      '{"modelId": "anthropic.claude-3-opus-20240229-v1:0"}\n',
+    )
+
+    const edits: FileEdit[] = [
+      {
+        file: filePath,
+        line: 1,
+        column: 12,
+        oldText: 'anthropic.claude-3-opus-20240229-v1:0',
+        newText: 'anthropic.claude-opus-4-6-v1:0',
+      },
+    ]
+
+    await applyFixes(edits)
+
+    const updated = await readFile(filePath, 'utf-8')
+    expect(updated).toBe('{"modelId": "anthropic.claude-opus-4-6-v1:0"}\n')
   })
 
   it('preserves single quotes around replaced text', async () => {
