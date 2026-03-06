@@ -1,27 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { buildPrefixRegex, fileMatchesPrefixFilter } from '../../src/core/prefix-filter.js'
 import type { UpgradeMap } from '../../src/core/types.js'
-
-const UPGRADES_PATH = join(
-  import.meta.dirname,
-  '..',
-  '..',
-  'data',
-  'upgrades.json',
-)
-
-/**
- * Helper: load the real upgrades.json for integration tests.
- */
-async function loadRealMap(): Promise<UpgradeMap> {
-  const raw = await readFile(UPGRADES_PATH, 'utf-8')
-  return JSON.parse(raw) as UpgradeMap
-}
+import { loadRealMap } from '../helpers/load-map.js'
 
 describe('buildPrefixRegex', () => {
-  it('derives correct stems from map keys', () => {
+  it('matches all map keys that have separator-based stems', () => {
     const map: UpgradeMap = {
       'gpt-4': { safe: null, major: 'gpt-4.1' },
       'gpt-4o-2024-05-13': { safe: 'gpt-4o-2024-08-06', major: 'gpt-4.1' },
@@ -43,17 +26,15 @@ describe('buildPrefixRegex', () => {
     }
 
     const regex = buildPrefixRegex(map)
-    const source = regex.source
 
-    // All expected stems must appear in the regex
-    // Note: RegExp.source escapes forward slashes as \/, so we check escaped forms
-    expect(source).toContain('gpt-')         // from gpt-4, gpt-4o-*
-    expect(source).toContain('claude-')      // from claude-3-*
-    expect(source).toContain('openai\\/')    // from openai/gpt-4
-    expect(source).toContain('gemini-')      // from gemini-pro
-    expect(source).toContain('anthropic\\.') // from anthropic.claude-* (dot escaped)
-    expect(source).toContain('anthropic\\/') // from anthropic/claude-*
-    expect(source).toContain('gemini\\/')    // from gemini/gemini-*
+    // Every key in the map should be matched by the prefix regex
+    for (const key of Object.keys(map)) {
+      expect(regex.test(key)).toBe(true)
+    }
+
+    // Should NOT match unrelated strings
+    expect(regex.test('no model here')).toBe(false)
+    expect(regex.test('llama-3')).toBe(false)
   })
 
   it('returns a RegExp that matches lines containing provider stems', () => {

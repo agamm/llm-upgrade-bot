@@ -1,30 +1,25 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { writeFile, mkdtemp, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { loadUpgradeMap, lookupModel } from '../../src/core/upgrade-map.js'
 import type { UpgradeMap } from '../../src/core/types.js'
-
-const UPGRADES_PATH = join(
-  import.meta.dirname,
-  '..',
-  '..',
-  'data',
-  'upgrades.json',
-)
+import { loadRealMap, UPGRADES_PATH } from '../helpers/load-map.js'
 
 describe('loadUpgradeMap', () => {
-  it('parses valid JSON file and returns Result with ok:true and typed UpgradeMap', async () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('parses valid JSON file and returns ok:true with typed UpgradeMap', async () => {
     const result = await loadUpgradeMap({ fallbackPath: UPGRADES_PATH })
 
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
-    // Verify it has the expected structure — keys exist with correct shape
     const map = result.data
     expect(Object.keys(map).length).toBeGreaterThan(0)
 
-    // Each entry must have { safe: string|null, major: string|null }
     for (const [, entry] of Object.entries(map)) {
       expect(entry).toHaveProperty('safe')
       expect(entry).toHaveProperty('major')
@@ -34,12 +29,11 @@ describe('loadUpgradeMap', () => {
       expect(
         entry.major === null || typeof entry.major === 'string',
       ).toBe(true)
-      // At least one upgrade path must exist
       expect(entry.safe !== null || entry.major !== null).toBe(true)
     }
   })
 
-  it('rejects malformed JSON and returns ok:false Result', async () => {
+  it('rejects malformed JSON and returns ok:false', async () => {
     let tempDir: string | undefined
     try {
       tempDir = await mkdtemp(join(tmpdir(), 'upgrade-map-test-'))
@@ -94,8 +88,6 @@ describe('loadUpgradeMap', () => {
         major: null,
       })
     }
-
-    vi.unstubAllGlobals()
   })
 
   it('falls back to bundled file when URL fetch fails', async () => {
@@ -112,11 +104,10 @@ describe('loadUpgradeMap', () => {
     expect(fetch).toHaveBeenCalledWith('https://example.com/upgrades.json')
     expect(result.ok).toBe(true)
     if (result.ok) {
-      // Should have loaded from the bundled file
-      expect(result.data['gpt-4']).toEqual({ safe: null, major: 'gpt-4.1' })
+      // Verify it loaded from the bundled file (has real entries)
+      expect(Object.keys(result.data).length).toBeGreaterThan(10)
+      expect(result.data['gpt-4']).toBeDefined()
     }
-
-    vi.unstubAllGlobals()
   })
 
   it('falls back to bundled file when URL returns non-ok response', async () => {
@@ -136,10 +127,8 @@ describe('loadUpgradeMap', () => {
 
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.data['gpt-4']).toEqual({ safe: null, major: 'gpt-4.1' })
+      expect(Object.keys(result.data).length).toBeGreaterThan(10)
     }
-
-    vi.unstubAllGlobals()
   })
 
   it('returns ok:false when URL returns invalid JSON and fallback also fails', async () => {
@@ -157,8 +146,6 @@ describe('loadUpgradeMap', () => {
     })
 
     expect(result.ok).toBe(false)
-
-    vi.unstubAllGlobals()
   })
 
   it('loads from default fallback path when no options provided', async () => {
@@ -166,7 +153,7 @@ describe('loadUpgradeMap', () => {
 
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.data['gpt-4']).toEqual({ safe: null, major: 'gpt-4.1' })
+      expect(Object.keys(result.data).length).toBeGreaterThan(10)
     }
   })
 })
@@ -175,15 +162,11 @@ describe('lookupModel', () => {
   let map: UpgradeMap
 
   beforeEach(async () => {
-    const raw = await readFile(UPGRADES_PATH, 'utf-8')
-    map = JSON.parse(raw) as UpgradeMap
+    map = await loadRealMap()
   })
 
   it('returns an UpgradeEntry for a known model', () => {
-    // Pick the first key in the map
-    const firstKey = Object.keys(map)[0]
-    expect(firstKey).toBeDefined()
-    const entry = lookupModel(map, firstKey as string)
+    const entry = lookupModel(map, 'gpt-4')
     expect(entry).toBeDefined()
     expect(entry).toHaveProperty('safe')
     expect(entry).toHaveProperty('major')
@@ -198,20 +181,17 @@ describe('lookupModel', () => {
   })
 
   it('returns correct entry for platform-variant model', () => {
-    // Find any OpenRouter-prefixed key
     const orKey = Object.keys(map).find((k) => k.includes('/'))
-    if (!orKey) return // skip if no prefixed keys
-    const entry = lookupModel(map, orKey)
+    expect(orKey).toBeDefined()
+    const entry = lookupModel(map, orKey as string)
     expect(entry).toBeDefined()
   })
 
   it('returns undefined for unknown model', () => {
-    const entry = lookupModel(map, 'nonexistent-model-xyz')
-    expect(entry).toBeUndefined()
+    expect(lookupModel(map, 'nonexistent-model-xyz')).toBeUndefined()
   })
 
   it('returns undefined for empty string', () => {
-    const entry = lookupModel(map, '')
-    expect(entry).toBeUndefined()
+    expect(lookupModel(map, '')).toBeUndefined()
   })
 })

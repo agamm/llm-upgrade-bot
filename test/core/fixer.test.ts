@@ -3,7 +3,8 @@ import { writeFile, readFile, mkdtemp, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { computeEdits, applyFixes } from '../../src/core/fixer.js'
-import type { ScanResult, FileEdit } from '../../src/core/types.js'
+import { scanFile } from '../../src/core/scanner.js'
+import type { ScanResult, FileEdit, UpgradeMap } from '../../src/core/types.js'
 
 // ─── computeEdits ───────────────────────────────────────────────────────────
 
@@ -433,6 +434,31 @@ describe('applyFixes', () => {
     expect(updated).toBe('{"modelId": "anthropic.claude-opus-4-6-v1:0"}\n')
   })
 
+  it('reports zero applied when oldText no longer matches file content', async () => {
+    const dir = await makeTmpDir()
+    const filePath = join(dir, 'changed.ts')
+    // File was modified between scan and fix — old model already gone
+    await writeFile(filePath, 'const MODEL = "gpt-4.1"\n')
+
+    const edits: FileEdit[] = [
+      {
+        file: filePath,
+        line: 1,
+        column: 14,
+        oldText: 'gpt-4o-2024-05-13',
+        newText: 'gpt-4o-2024-08-06',
+      },
+    ]
+
+    const result = await applyFixes(edits)
+
+    expect(result.applied).toBe(0)
+    expect(result.files).toEqual([])
+    // File should be unchanged
+    const content = await readFile(filePath, 'utf-8')
+    expect(content).toBe('const MODEL = "gpt-4.1"\n')
+  })
+
   it('preserves single quotes around replaced text', async () => {
     const dir = await makeTmpDir()
     const filePath = join(dir, 'app.py')
@@ -453,5 +479,77 @@ describe('applyFixes', () => {
     const updated = await readFile(filePath, 'utf-8')
     expect(updated).toBe("model = 'gpt-4.1'\n")
     expect(result.applied).toBe(1)
+  })
+})
+
+// ─── Round-trip: scan → fix → rescan ────────────────────────────────────────
+
+describe('scan → fix → rescan round-trip', () => {
+  let tmpDir: string
+
+  afterEach(async () => {
+    if (tmpDir) {
+      await rm(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  const map: UpgradeMap = {
+    'gpt-4': { safe: null, major: 'gpt-4.1' },
+    'claude-3-opus-20240229': { safe: null, major: 'claude-opus-4-6' },
+    'openai/gpt-4': { safe: null, major: 'openai/gpt-4.1' },
+  }
+
+  it('rescan finds zero matches after fix is applied', async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'roundtrip-'))
+    const filePath = join(tmpDir, 'api.ts')
+    await writeFile(filePath, 'const MODEL = "gpt-4"\n')
+
+    // Scan
+    const content = await readFile(filePath, 'utf-8')
+    const results = scanFile('api.ts', content, map)
+    expect(results).toHaveLength(1)
+
+    // Fix
+    const edits = computeEdits(results)
+    await applyFixes(edits.map((e) => ({ ...e, file: filePath })))
+
+    // Rescan — should find nothing
+    const updated = await readFile(filePath, 'utf-8')
+    const reResults = scanFile('api.ts', updated, map)
+    expect(reResults).toEqual([])
+  })
+
+  it('multi-file round-trip with mixed native and prefixed models', async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'roundtrip-multi-'))
+    const file1 = join(tmpDir, 'a.py')
+    const file2 = join(tmpDir, 'b.yaml')
+    await writeFile(file1, "model = 'gpt-4'\n")
+    await writeFile(file2, 'model: "openai/gpt-4"\n')
+
+    // Scan both
+    const c1 = await readFile(file1, 'utf-8')
+    const c2 = await readFile(file2, 'utf-8')
+    const r1 = scanFile('a.py', c1, map)
+    const r2 = scanFile('b.yaml', c2, map)
+    expect(r1).toHaveLength(1)
+    expect(r2).toHaveLength(1)
+
+    // Fix both
+    const allEdits = computeEdits([...r1, ...r2])
+    expect(allEdits).toHaveLength(2)
+    await applyFixes([
+      { ...allEdits[0] as typeof allEdits[0], file: file1 },
+      { ...allEdits[1] as typeof allEdits[1], file: file2 },
+    ])
+
+    // Rescan both — zero matches
+    const u1 = await readFile(file1, 'utf-8')
+    const u2 = await readFile(file2, 'utf-8')
+    expect(scanFile('a.py', u1, map)).toEqual([])
+    expect(scanFile('b.yaml', u2, map)).toEqual([])
+
+    // Verify correct replacements written
+    expect(u1).toContain('gpt-4.1')
+    expect(u2).toContain('openai/gpt-4.1')
   })
 })

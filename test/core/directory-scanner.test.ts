@@ -1,19 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { scanDirectory, SUPPORTED_EXTENSIONS } from '../../src/core/directory-scanner.js'
 import type { UpgradeMap } from '../../src/core/types.js'
+import { loadRealMap } from '../helpers/load-map.js'
 
 const FIXTURES_DIR = join(import.meta.dirname, '..', 'fixtures', 'sample-project')
-const UPGRADES_PATH = join(import.meta.dirname, '..', '..', 'data', 'upgrades.json')
-
-/**
- * Helper: load the real upgrades.json for integration tests.
- */
-async function loadRealMap(): Promise<UpgradeMap> {
-  const raw = await readFile(UPGRADES_PATH, 'utf-8')
-  return JSON.parse(raw) as UpgradeMap
-}
 
 /** Minimal upgrade map for unit tests */
 const testMap: UpgradeMap = {

@@ -58,11 +58,11 @@ export async function applyFixes(
 
   for (const [filePath, fileEdits] of byFile) {
     const content = await readFile(filePath, 'utf-8')
-    const updated = applyEditsToContent(content, fileEdits)
+    const { result: updated, appliedCount } = applyEditsToContent(content, fileEdits)
     await writeFile(filePath, updated, 'utf-8')
 
-    applied += fileEdits.length
-    files.push(filePath)
+    applied += appliedCount
+    if (appliedCount > 0) files.push(filePath)
   }
 
   return { applied, files }
@@ -73,7 +73,10 @@ export async function applyFixes(
  * (descending by line, then descending by column) so that replacements
  * with different-length strings do not corrupt the positions of earlier edits.
  */
-function applyEditsToContent(content: string, edits: FileEdit[]): string {
+function applyEditsToContent(
+  content: string,
+  edits: FileEdit[],
+): { result: string; appliedCount: number } {
   // Sort descending: highest line first, then highest column first
   const sorted = [...edits].sort((a, b) => {
     if (a.line !== b.line) return b.line - a.line
@@ -81,6 +84,7 @@ function applyEditsToContent(content: string, edits: FileEdit[]): string {
   })
 
   const lines = content.split('\n')
+  let appliedCount = 0
 
   for (const edit of sorted) {
     const lineIndex = edit.line - 1 // 1-based to 0-based
@@ -96,8 +100,9 @@ function applyEditsToContent(content: string, edits: FileEdit[]): string {
     if (quoteChar && afterQuote.startsWith(edit.oldText)) {
       lines[lineIndex] =
         before + quoteChar + edit.newText + afterQuote.slice(edit.oldText.length)
+      appliedCount++
     }
   }
 
-  return lines.join('\n')
+  return { result: lines.join('\n'), appliedCount }
 }
