@@ -80,7 +80,7 @@ describe('scanDirectory', () => {
     try {
       // Write a file with unsupported extension
       await writeFile(
-        join(tempDir, 'readme.md'),
+        join(tempDir, 'readme.txt'),
         'model: "gpt-4"\n',
       )
       // Write a file with supported extension
@@ -93,8 +93,8 @@ describe('scanDirectory', () => {
 
       // Only the .yaml file should count as a supported file
       expect(report.totalFiles).toBe(1)
-      // The .md file should be skipped entirely
-      expect(report.matches.every((m) => !m.file.endsWith('.md'))).toBe(true)
+      // The .txt file should be skipped entirely
+      expect(report.matches.every((m) => !m.file.endsWith('.txt'))).toBe(true)
     } finally {
       await rm(tempDir, { recursive: true })
     }

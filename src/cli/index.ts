@@ -25,14 +25,22 @@ program
   .option('--fix', 'auto-apply upgrades to files')
   .option('--json', 'output results as JSON')
   .option('--pr-body', 'output markdown PR body for upgrade matches')
-  .action(async (directory: string, options: { fix?: boolean; json?: boolean; prBody?: boolean }) => {
+  .option('--extensions <exts>', 'extra file extensions to scan (comma-separated, e.g. ".txt,.cfg")')
+  .action(async (directory: string, options: { fix?: boolean; json?: boolean; prBody?: boolean; extensions?: string }) => {
     const dir = resolve(directory)
     await runScan(dir, options)
   })
 
+function parseExtensions(raw?: string): string[] {
+  if (!raw) return []
+  return raw.split(',').map((e) => e.trim()).map((e) =>
+    e.startsWith('.') ? e : `.${e}`,
+  )
+}
+
 async function runScan(
   dir: string,
-  options: { fix?: boolean; json?: boolean; prBody?: boolean },
+  options: { fix?: boolean; json?: boolean; prBody?: boolean; extensions?: string },
 ): Promise<void> {
   const mapResult = await loadUpgradeMap()
   if (!mapResult.ok) {
@@ -42,8 +50,9 @@ async function runScan(
   }
 
   const upgradeMap = mapResult.data
+  const extraExtensions = parseExtensions(options.extensions)
   const start = performance.now()
-  const report = await scanDirectory(dir, upgradeMap)
+  const report = await scanDirectory(dir, upgradeMap, { extraExtensions })
   const durationMs = Math.round(performance.now() - start)
 
   if (options.json) {

@@ -14,6 +14,10 @@ inputs:
     description: 'Base branch for the PR'
     required: false
     default: 'main'
+  extensions:
+    description: 'Extra file extensions to scan (comma-separated, e.g. ".txt,.cfg")'
+    required: false
+    default: ''
 
 outputs:
   pr-url:
@@ -31,7 +35,11 @@ runs:
       shell: bash
       run: |
         set +e
-        node "${{ github.action_path }}/dist/cli.js" "${{ inputs.directory }}" > /dev/null 2>&1
+        ext_flag=""
+        if [ -n "${{ inputs.extensions }}" ]; then
+          ext_flag="--extensions ${{ inputs.extensions }}"
+        fi
+        node "${{ github.action_path }}/dist/cli.js" "${{ inputs.directory }}" $ext_flag > /dev/null 2>&1
         exit_code=$?
         set -e
         if [ "$exit_code" -eq 1 ]; then
@@ -64,7 +72,11 @@ runs:
       id: pr-body
       shell: bash
       run: |
-        body=$(node "${{ github.action_path }}/dist/cli.js" "${{ inputs.directory }}" --pr-body)
+        ext_flag=""
+        if [ -n "${{ inputs.extensions }}" ]; then
+          ext_flag="--extensions ${{ inputs.extensions }}"
+        fi
+        body=$(node "${{ github.action_path }}/dist/cli.js" "${{ inputs.directory }}" --pr-body $ext_flag)
         {
           echo "body<<PREOF"
           echo "$body"
@@ -74,7 +86,12 @@ runs:
     - name: Apply fixes
       if: steps.scan.outputs.upgrades-found == 'true' && steps.dedup.outputs.skip != 'true'
       shell: bash
-      run: node "${{ github.action_path }}/dist/cli.js" "${{ inputs.directory }}" --fix
+      run: |
+        ext_flag=""
+        if [ -n "${{ inputs.extensions }}" ]; then
+          ext_flag="--extensions ${{ inputs.extensions }}"
+        fi
+        node "${{ github.action_path }}/dist/cli.js" "${{ inputs.directory }}" --fix $ext_flag
 
     - name: Create Pull Request
       if: steps.scan.outputs.upgrades-found == 'true' && steps.dedup.outputs.skip != 'true'

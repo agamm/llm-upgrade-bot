@@ -14,5 +14,6 @@ export { buildPrefixRegex, fileMatchesPrefixFilter } from './prefix-filter.js'
 export { scanFile } from './scanner.js'
 
 export { scanDirectory, SUPPORTED_EXTENSIONS } from './directory-scanner.js'
+export type { ScanOptions } from './directory-scanner.js'
 
 export { computeEdits, applyFixes } from './fixer.js'

@@ -21,6 +21,8 @@ export const SUPPORTED_EXTENSIONS: readonly string[] = Object.freeze([
   '.ex', '.exs', '.r', '.R',
   // Frontend frameworks
   '.vue', '.svelte',
+  // Docs / content
+  '.md', '.mdx',
   // Config / data
   '.yaml', '.yml', '.json', '.toml',
   '.env', '.cfg', '.ini',
@@ -36,11 +38,19 @@ const IGNORED_DIRS = new Set([
   '__pycache__', '.venv', 'coverage', '.next', '.nuxt',
 ])
 
+export interface ScanOptions {
+  extraExtensions?: string[]
+}
+
 /**
  * Check if a file has a supported extension.
  */
-function hasSupportedExtension(filePath: string): boolean {
-  return SUPPORTED_EXTENSIONS.includes(extname(filePath))
+function hasSupportedExtension(
+  filePath: string,
+  extra: string[] = [],
+): boolean {
+  const ext = extname(filePath)
+  return SUPPORTED_EXTENSIONS.includes(ext) || extra.includes(ext)
 }
 
 /**
@@ -109,9 +119,12 @@ async function directoryExists(dir: string): Promise<boolean> {
 /**
  * List supported files in a directory using git or fallback walk.
  */
-async function listSupportedFiles(dir: string): Promise<string[]> {
+async function listSupportedFiles(
+  dir: string,
+  extra: string[] = [],
+): Promise<string[]> {
   const allFiles = tryGitLsFiles(dir) ?? (await walkDirectory(dir, dir))
-  return allFiles.filter(hasSupportedExtension)
+  return allFiles.filter((f) => hasSupportedExtension(f, extra))
 }
 
 /**
@@ -162,6 +175,7 @@ async function readFileSafe(path: string): Promise<string | null> {
 export async function scanDirectory(
   dir: string,
   upgradeMap: UpgradeMap,
+  options?: ScanOptions,
 ): Promise<ScanReport> {
   const empty: ScanReport = {
     totalFiles: 0, scannedFiles: 0, matches: [],
@@ -169,7 +183,8 @@ export async function scanDirectory(
 
   if (!(await directoryExists(dir))) return empty
 
-  const supportedFiles = await listSupportedFiles(dir)
+  const extra = options?.extraExtensions ?? []
+  const supportedFiles = await listSupportedFiles(dir, extra)
   const prefixRegex = buildPrefixRegex(upgradeMap)
   const { scannedFiles, matches } = await twoPassScan(
     dir, supportedFiles, upgradeMap, prefixRegex,

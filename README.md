@@ -54,6 +54,7 @@ jobs:
 npx llm-upgrade-bot ./your-project        # scan
 npx llm-upgrade-bot ./your-project --fix   # auto-fix
 npx llm-upgrade-bot ./your-project --json  # machine-readable
+npx llm-upgrade-bot . --extensions ".txt,.rst"  # add extra file types
 ```
 
 ## How it works
@@ -81,6 +82,7 @@ See the full [upgrade map](data/upgrades.json).
 | `token` | `github.token` | GitHub token with `contents:write` and `pull-requests:write` |
 | `directory` | `.` | Directory to scan |
 | `base-branch` | `main` | Base branch for the PR |
+| `extensions` | `""` | Extra file extensions to scan (comma-separated, e.g. `".txt,.cfg"`) |
 
 | Output | Description |
 |--------|-------------|
