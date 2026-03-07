@@ -1,5 +1,8 @@
 name: 'LLM Upgrade Bot'
 description: 'Scan for outdated LLM model strings and create a PR with upgrades'
+branding:
+  icon: refresh-cw
+  color: blue
 
 inputs:
   token:
