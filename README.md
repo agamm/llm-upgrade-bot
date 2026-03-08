@@ -19,15 +19,9 @@ $ llm-upgrade-bot ./src
 
 ## Install as GitHub Action
 
-Add a workflow to get automatic upgrade PRs -- click the button or copy the YAML below.
-
-[<img src="https://img.shields.io/badge/Install_GitHub_Action-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white" alt="Install GitHub Action" height="36">](https://github.com/agamm/llm-upgrade-bot/new/main/.github/workflows?filename=llm-upgrades.yml&value=name%3A%20LLM%20Model%20Upgrades%0Aon%3A%0A%20%20schedule%3A%0A%20%20%20%20-%20cron%3A%20%270%20*%2F6%20*%20*%20*%27%20%20%23%20Every%206%20hours%0A%20%20workflow_dispatch%3A%0A%0Apermissions%3A%0A%20%20contents%3A%20write%0A%20%20pull-requests%3A%20write%0A%0Ajobs%3A%0A%20%20upgrade%3A%0A%20%20%20%20runs-on%3A%20ubuntu-latest%0A%20%20%20%20steps%3A%0A%20%20%20%20%20%20-%20uses%3A%20actions%2Fcheckout%40v4%0A%20%20%20%20%20%20-%20uses%3A%20agamm%2Fllm-upgrade-bot%40main%0A)
-
-<details>
-<summary>Or copy the workflow YAML manually</summary>
+Create `.github/workflows/llm-upgrades.yml` in your repo:
 
 ```yaml
-# .github/workflows/llm-upgrades.yml
 name: LLM Model Upgrades
 on:
   schedule:
@@ -43,10 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: agamm/llm-upgrade-bot@main
+      - uses: agamm/llm-upgrade-bot@v1
 ```
-
-</details>
 
 ## CLI usage
 
