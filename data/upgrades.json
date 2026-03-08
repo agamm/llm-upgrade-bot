@@ -35,10 +35,10 @@
   "o3-mini-2025-01-31": { "safe": null, "major": "o4-mini" },
 
   "gpt-4o-audio-preview": { "safe": null, "major": "gpt-audio" },
-  "gpt-4o-audio-preview-2024-12-17": { "safe": null, "major": "gpt-audio" },
+  "gpt-4o-audio-preview-2024-12-17": { "safe": "gpt-4o-audio-preview-2025-06-03", "major": "gpt-audio" },
   "gpt-4o-mini-audio-preview": { "safe": null, "major": "gpt-audio-mini" },
   "gpt-4o-realtime-preview": { "safe": null, "major": "gpt-realtime" },
-  "gpt-4o-realtime-preview-2024-12-17": { "safe": null, "major": "gpt-realtime" },
+  "gpt-4o-realtime-preview-2024-12-17": { "safe": "gpt-4o-realtime-preview-2025-06-03", "major": "gpt-realtime" },
   "gpt-4o-mini-realtime-preview": { "safe": null, "major": "gpt-realtime-mini" },
 
   "whisper-1": { "safe": null, "major": "gpt-4o-transcribe" },
