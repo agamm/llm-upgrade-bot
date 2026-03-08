@@ -78,6 +78,8 @@ When the action runs in your repo, it:
 | safe | Same family, newer version | `gpt-4o-2024-05-13` -> `gpt-4o-2024-11-20` |
 | major | Latest model in capability tier | `gpt-4o` -> `gpt-5.4` |
 
+Test directories (`test/`, `tests/`, `__tests__/`, `spec/`, `fixtures/`, etc.) and test files (`*.test.ts`, `*_test.go`, `*Test.java`, etc.) are excluded by default. Use `--include "test/**"` to scan them.
+
 ## Privacy
 
 **Your code never leaves your repo.** The tool runs entirely inside your GitHub Actions runner (or locally). The only network request is fetching the public [upgrade map](data/upgrades.json) — a static JSON file. No code is uploaded or shared. No API keys required. Works offline with the bundled fallback map.
