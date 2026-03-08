@@ -19,6 +19,8 @@ $ llm-upgrade-bot ./src
 
 ## Install as GitHub Action
 
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-LLM%20Upgrade%20Bot-blue?logo=github)](https://github.com/marketplace/actions/llm-upgrade-bot)
+
 Create `.github/workflows/llm-upgrades.yml` in your repo:
 
 ```yaml
