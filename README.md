@@ -2,16 +2,16 @@
 
 **Dependabot for LLM model versions.** Scans your codebase for outdated model strings and opens PRs to upgrade them.
 
-Hardcoded `gpt-4`, `claude-3-opus`, or `gemini-pro`? This tool finds them and upgrades to the latest versions -- across **235+ model strings** from OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Moonshot, Cohere, Qwen, MiniMax, and more.
+Hardcoded `gpt-5.4`, `claude-3-opus`, or `gemini-3.1-pro-preview`? This tool finds them and upgrades to the latest versions -- across **235+ model strings** from OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Moonshot, Cohere, Qwen, MiniMax, and more.
 
 ```
 $ llm-upgrade-bot ./src
 
-  src/api.ts:12  "gpt-4o-2024-05-13"
+  src/api.ts:12  "gpt-4o-2024-11-20"
     -> safe:  gpt-4o-2024-11-20
     -> major: gpt-5.4
 
-  src/config.yaml:5  "claude-3-opus-20240229"
+  src/config.yaml:5  "claude-opus-4-6"
     -> major: claude-opus-4-6
 
   Found 2 upgradable models in 2 files
