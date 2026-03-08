@@ -22,7 +22,6 @@ export { computeEdits, applyFixes } from './fixer.js'
 
 export {
   validateUpgradeMap,
-  findOrphanedTargets,
   checkVariantConsistency,
   OPENROUTER_RULE,
 } from './variant-validator.js'
