@@ -7,7 +7,7 @@ Hardcoded `{gpt-4}`, `{claude-3-opus}`, or `{gemini-2.5-pro}`? This tool finds t
 ```
 $ llm-upgrade-bot ./src
 
-  src/api.ts:12  "gpt-4o-2024-11-20"
+  src/api.ts:12  "gpt-4o-2024-05-13"
     -> safe:  gpt-4o-2024-11-20
     -> major: gpt-5.4
 
