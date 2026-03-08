@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { loadRealMap } from '../helpers/load-map.js'
+import { validateUpgradeMap } from '../../src/core/variant-validator.js'
 
 describe('data/upgrades.json schema validation', () => {
   it('every entry has safe and major fields of correct type', async () => {
@@ -60,5 +61,23 @@ describe('data/upgrades.json schema validation', () => {
 
     // Bedrock-prefixed
     expect(keys.some((k) => k.startsWith('anthropic.'))).toBe(true)
+
+    // Together AI (PascalCase)
+    expect(keys.some((k) => k.startsWith('meta-llama/Llama-'))).toBe(true)
+    expect(keys.some((k) => k.startsWith('Qwen/'))).toBe(true)
+    expect(keys.some((k) => k.startsWith('deepseek-ai/'))).toBe(true)
+
+    // Groq (custom aliases)
+    expect(keys.some((k) => k === 'llama-3.3-70b-versatile')).toBe(true)
+    expect(keys.some((k) => k === 'llama-3.1-8b-instant')).toBe(true)
+  })
+
+  it('passes variant validation', async () => {
+    const map = await loadRealMap()
+    const result = validateUpgradeMap(map)
+    if (!result.ok) {
+      throw new Error(`Validation failed:\n${result.error.join('\n')}`)
+    }
+    expect(result.ok).toBe(true)
   })
 })

@@ -115,12 +115,6 @@
   "minimax-m2": { "safe": "minimax-m2-1", "major": "MiniMax-M2.5" },
   "minimax-m2-1": { "safe": null, "major": "MiniMax-M2.5" },
 
-  "command-r": { "safe": null, "major": "command-a-03-2025" },
-  "command-r-08-2024": { "safe": null, "major": "command-a-03-2025" },
-  "command-r-plus": { "safe": null, "major": "command-a-03-2025" },
-  "command-r-plus-08-2024": { "safe": null, "major": "command-a-03-2025" },
-  "command-r7b-12-2024": { "safe": null, "major": "command-a-03-2025" },
-
   "qwen-max": { "safe": null, "major": "qwen3-max" },
   "qwen-plus": { "safe": null, "major": "qwen3-coder-plus" },
   "qwen-turbo": { "safe": null, "major": "qwen3-max" },
@@ -177,7 +171,7 @@
   "meta-llama/llama-3.2-90b-vision-instruct": { "safe": null, "major": "meta-llama/llama-4-maverick-17b-128e-instruct" },
   "meta-llama/llama-3.3-70b-instruct": { "safe": null, "major": "meta-llama/llama-4-maverick-17b-128e-instruct" },
 
-  "deepseek/deepseek-chat": { "safe": "deepseek/deepseek-v3.2", "major": null },
+  "deepseek/deepseek-chat": { "safe": null, "major": "deepseek/deepseek-v3.2" },
   "deepseek/deepseek-coder": { "safe": null, "major": "deepseek/deepseek-v3.2" },
   "deepseek/deepseek-r1": { "safe": null, "major": "deepseek/deepseek-v3.2" },
 
@@ -196,11 +190,6 @@
   "qwen/qwen2.5-72b-instruct": { "safe": null, "major": "qwen/qwen3-max" },
   "qwen/qwen2.5-coder-32b-instruct": { "safe": null, "major": "qwen/qwen3-coder-plus" },
 
-  "cohere/command-r": { "safe": null, "major": "cohere/command-a-03-2025" },
-  "cohere/command-r-plus": { "safe": null, "major": "cohere/command-a-03-2025" },
-  "cohere/command-r-08-2024": { "safe": null, "major": "cohere/command-a-03-2025" },
-  "cohere/command-r-plus-08-2024": { "safe": null, "major": "cohere/command-a-03-2025" },
-
   "anthropic.claude-3-opus-20240229-v1:0": { "safe": null, "major": "anthropic.claude-opus-4-6-v1:0" },
   "anthropic.claude-3-sonnet-20240229-v1:0": { "safe": null, "major": "anthropic.claude-sonnet-4-6-v1:0" },
   "anthropic.claude-3-haiku-20240307-v1:0": { "safe": null, "major": "anthropic.claude-haiku-4-5-20251001-v1:0" },
@@ -210,5 +199,24 @@
 
   "gemini/gemini-1.5-pro": { "safe": null, "major": "gemini/gemini-2.5-pro" },
   "gemini/gemini-1.5-flash": { "safe": null, "major": "gemini/gemini-2.5-flash" },
-  "gemini/gemini-2.0-flash": { "safe": null, "major": "gemini/gemini-2.5-flash" }
+  "gemini/gemini-2.0-flash": { "safe": null, "major": "gemini/gemini-2.5-flash" },
+
+  "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo": { "safe": null, "major": "meta-llama/Llama-4-Scout-17B-16E-Instruct" },
+  "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo": { "safe": "meta-llama/Llama-3.3-70B-Instruct-Turbo", "major": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8" },
+  "meta-llama/Llama-3.3-70B-Instruct-Turbo": { "safe": null, "major": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8" },
+  "meta-llama/Llama-3.1-8B-Instruct": { "safe": null, "major": "meta-llama/Llama-4-Scout-17B-16E-Instruct" },
+  "meta-llama/Llama-3.2-3B-Instruct": { "safe": null, "major": "meta-llama/Llama-4-Scout-17B-16E-Instruct" },
+  "meta-llama/Llama-3.3-70B-Instruct": { "safe": null, "major": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8" },
+  "Qwen/Qwen2.5-72B-Instruct": { "safe": null, "major": "Qwen/Qwen3-235B-A22B-fp8" },
+  "Qwen/Qwen2.5-72B-Instruct-Turbo": { "safe": null, "major": "Qwen/Qwen3-235B-A22B-fp8" },
+  "Qwen/Qwen2.5-Coder-32B-Instruct": { "safe": null, "major": "Qwen/Qwen3-235B-A22B-fp8" },
+  "deepseek-ai/DeepSeek-R1": { "safe": null, "major": "deepseek-ai/DeepSeek-V3.2" },
+  "deepseek-ai/DeepSeek-V3-0324": { "safe": null, "major": "deepseek-ai/DeepSeek-V3.2" },
+  "mistralai/Mistral-Small-24B-Instruct-2501": { "safe": null, "major": "mistralai/Magistral-Small-2506" },
+  "mistralai/Mixtral-8x7B-Instruct-v0.1": { "safe": null, "major": "mistralai/Mistral-Small-24B-Instruct-2501" },
+  "mistralai/Mixtral-8x22B-Instruct-v0.1": { "safe": null, "major": "mistralai/Magistral-Small-2506" },
+
+  "llama-3.3-70b-versatile": { "safe": null, "major": "meta-llama/llama-4-maverick-17b-128e-instruct" },
+  "llama-3.1-8b-instant": { "safe": null, "major": "meta-llama/llama-4-scout-17b-16e-instruct" },
+  "qwen/qwen3-32b": { "safe": null, "major": "qwen/qwen3-max" }
 }

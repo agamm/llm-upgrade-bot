@@ -31,3 +31,17 @@ export interface FileEdit {
 export type Result<T, E = string> =
   | { ok: true; data: T }
   | { ok: false; error: E }
+
+export interface VariantRule {
+  name: string
+  pattern: RegExp
+  extractNative: (variantKey: string) => string | null
+}
+
+export interface ProviderConfig {
+  name: string
+  url: string
+  envVar: string
+  authStyle: 'bearer' | 'x-api-key' | 'query-param'
+  extractIds: (body: unknown) => string[]
+}

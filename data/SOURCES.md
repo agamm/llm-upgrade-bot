@@ -10,7 +10,11 @@ Reference for refreshing `upgrades.json`. Query these daily for new/deprecated m
 | OpenAI models | `GET https://api.openai.com/v1/models` | Requires API key. Returns all available model IDs. |
 | DeepSeek models | `GET https://api.deepseek.com/models` | Requires API key. |
 | Mistral models | `GET https://api.mistral.ai/v1/models` | Requires API key. |
-| Cohere models | `GET https://api.cohere.com/v2/models` | Requires API key. |
+| Anthropic models | `GET https://api.anthropic.com/v1/models` | Requires API key (`x-api-key` header). |
+| Google models | `GET https://generativelanguage.googleapis.com/v1beta/models?key=$KEY` | Requires API key (query param). |
+| xAI models | `GET https://api.x.ai/v1/models` | Requires API key. |
+| Together AI models | `GET https://api.together.xyz/v1/models` | Requires API key. |
+| Groq models | `GET https://api.groq.com/openai/v1/models` | Requires API key. |
 
 ## Documentation Pages
 
@@ -23,11 +27,9 @@ Reference for refreshing `upgrades.json`. Query these daily for new/deprecated m
 | Mistral | https://docs.mistral.ai/getting-started/models | (inline on models page) |
 | DeepSeek | https://api-docs.deepseek.com/quick_start/pricing | https://api-docs.deepseek.com/news |
 | xAI / Grok | https://docs.x.ai/developers/models | (inline on models page) |
-| Cohere | https://docs.cohere.com/docs/models | (inline on models page) |
 | AWS Bedrock | https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html | (inline) |
 | Groq | https://console.groq.com/docs/models | (inline) |
 | Together AI | https://docs.together.ai/docs/serverless-models | (inline) |
-| Fireworks AI | https://fireworks.ai/models | (inline) |
 
 ## Prefixed Variant Conventions
 
@@ -41,22 +43,17 @@ Reference for refreshing `upgrades.json`. Query these daily for new/deprecated m
 | Groq | custom aliases | `llama-3.3-70b-versatile` |
 | Together AI | `org/Model-Name-Variant` | `meta-llama/Llama-3.3-70B-Instruct-Turbo` |
 
-## Daily Update Strategy
+## Automated Discovery
 
-1. **Fetch OpenRouter** — `curl https://openrouter.ai/api/v1/models | jq '.data[].id'` — gives all current model IDs across providers
-2. **Diff against upgrades.json** — find new models not yet mapped, and models removed (fully deprecated)
-3. **Check deprecation pages** — for each provider, note newly deprecated models and their recommended replacements
-4. **Update upgrades.json** — add new entries, update `safe`/`major` targets, remove entries where the source model no longer exists anywhere
+The `discover-models` workflow runs weekly (Monday 9am UTC) and on-demand via `workflow_dispatch`.
+It queries 9 provider APIs, diffs against `upgrades.json`, and opens a PR with proposed upgrades.
 
-## Data Collected: 2026-03-05
+Run locally: `pnpm discover` (reads API keys from `.env`)
+Validate: `pnpm validate` (checks upgrades.json consistency)
 
-Sources queried for this seed:
-- OpenRouter API (live fetch)
-- OpenAI models + deprecations pages (web search)
-- Anthropic models + deprecations pages (web search)
-- Google Gemini models + deprecations pages (web search)
-- Mistral models page (web search)
-- DeepSeek API docs (web search)
-- xAI models page (web search)
-- Cohere models page (web search)
-- AWS Bedrock supported models (web search)
+## Data Collected: 2026-03-07
+
+Sources queried:
+- OpenRouter API, OpenAI API, Anthropic API, Google API, Mistral API
+- DeepSeek API, xAI API, Together AI API, Groq API
+- AWS Bedrock supported models (manual)

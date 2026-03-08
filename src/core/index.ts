@@ -5,6 +5,8 @@ export type {
   ScanReport,
   FileEdit,
   Result,
+  VariantRule,
+  ProviderConfig,
 } from './types.js'
 
 export { loadUpgradeMap, lookupModel } from './upgrade-map.js'
@@ -17,3 +19,22 @@ export { scanDirectory, SUPPORTED_EXTENSIONS } from './directory-scanner.js'
 export type { ScanOptions } from './directory-scanner.js'
 
 export { computeEdits, applyFixes } from './fixer.js'
+
+export {
+  validateUpgradeMap,
+  findOrphanedTargets,
+  checkVariantConsistency,
+  OPENROUTER_RULE,
+} from './variant-validator.js'
+
+export {
+  fetchProviderModels,
+  fetchAllProviderModels,
+  filterChatModels,
+  diffModels,
+  detectSafeUpgrades,
+  suggestMajorUpgrades,
+  generateReport,
+  PROVIDER_CONFIGS,
+} from './model-discovery.js'
+export type { ProposedEntry } from './model-discovery.js'

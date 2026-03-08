@@ -10,6 +10,8 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - Lint: `pnpm lint` (eslint)
 - Format: `pnpm format` (prettier)
 - Typecheck: `pnpm typecheck` (tsc --noEmit)
+- Validate: `pnpm validate` (variant consistency checks on upgrades.json)
+- Discover: `pnpm discover` (fetch provider APIs, propose new upgrade paths)
 
 ## Code Style
 - Functional-first: pure functions, no classes, data-in/data-out
@@ -17,7 +19,8 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - camelCase functions/variables, PascalCase types/interfaces
 
 ## Architecture
-- `src/core/` — scanner, upgrade-map, fixer (platform-agnostic, no I/O opinions)
+- `src/core/` — scanner, upgrade-map, fixer, variant-validator, model-discovery (platform-agnostic, no I/O opinions)
+- `scripts/` — validate-variants.ts, discover-models.ts (CLI entry points for maintenance tasks)
 - `src/cli/` — Commander.js commands, terminal output (picocolors + nanospinner)
 - `action.yml` — composite GitHub Action (no src/action/ dir, delegates to CLI + peter-evans/create-pull-request)
 - Dependency direction: cli/ → core/. Core never imports from cli.
@@ -37,6 +40,10 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - upgrades.json values are objects `{ safe, major }` not plain strings
 - Fetch latest upgrades.json from URL at runtime, fall back to bundled
 - Exit code: 0 = no upgrades, 1 = upgrades available
+- Provider variants: Native, OpenRouter (covers LiteLLM + Vercel), Bedrock, Together AI (PascalCase), Groq (custom aliases)
+- `variant-validator` checks orphaned targets and cross-variant consistency
+- `model-discovery` fetches 9 provider APIs, diffs, detects safe/major upgrades via date/version heuristics
+- `.github/workflows/discover-models.yml` — weekly auto-discovery, opens PR via peter-evans/create-pull-request
 
 ## GitHub Action Versioning
 - Published on GitHub Marketplace. Users pin to major version tag: `uses: agamm/llm-upgrade-bot@v1`

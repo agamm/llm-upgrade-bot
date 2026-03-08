@@ -24,7 +24,9 @@
     "lint": "eslint src test",
     "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts' 'test/**/*.ts'",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate": "tsx scripts/validate-variants.ts",
+    "discover": "tsx scripts/discover-models.ts"
   },
   "engines": {
     "node": ">=18"
