@@ -5,6 +5,7 @@ const LATEST_MODELS_ALLOWLIST = new Set([
   'gpt-5.4', 'gpt-5.4-pro', 'gpt-5-mini', 'gpt-5-nano',
   'o3', 'o3-pro', 'o4-mini',
   'gpt-audio', 'gpt-audio-mini', 'gpt-realtime', 'gpt-realtime-mini',
+  'gpt-4o-audio-preview-2025-06-03', 'gpt-4o-realtime-preview-2025-06-03',
   'gpt-4o-transcribe', 'gpt-4o-mini-tts', 'gpt-image-1.5',
   'text-embedding-3-large',
   // Anthropic

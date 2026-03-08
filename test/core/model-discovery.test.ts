@@ -104,6 +104,7 @@ describe('generateReport', () => {
         entry: { safe: 'gpt-4o-2024-11-20', major: null },
         confidence: 'auto' as const,
         reason: 'newer date',
+        sources: ['OpenAI'],
       },
     ]
     const report = generateReport(proposed, [])

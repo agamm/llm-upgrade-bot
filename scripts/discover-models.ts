@@ -76,11 +76,17 @@ async function main() {
     process.exit(1)
   }
 
-  // Collect all discovered model IDs
+  // Collect all discovered model IDs and build source map (model → providers)
   const allDiscovered: string[] = []
+  const sourceMap = new Map<string, string[]>()
   for (const [provider, ids] of Object.entries(models)) {
     console.log(`  ${provider}: ${String(ids.size)} models`)
-    allDiscovered.push(...ids)
+    for (const id of ids) {
+      allDiscovered.push(id)
+      const existing = sourceMap.get(id)
+      if (existing) existing.push(provider)
+      else sourceMap.set(id, [provider])
+    }
   }
 
   // Diff and filter
@@ -94,8 +100,8 @@ async function main() {
   }
 
   // Detect upgrades and deduplicate
-  const safeProposed = detectSafeUpgrades(newModels, map)
-  const majorProposed = suggestMajorUpgrades(newModels, map)
+  const safeProposed = detectSafeUpgrades(newModels, map, sourceMap)
+  const majorProposed = suggestMajorUpgrades(newModels, map, sourceMap)
   const allProposed = deduplicateProposals([...safeProposed, ...majorProposed])
 
   console.log(

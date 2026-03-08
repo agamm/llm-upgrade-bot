@@ -5,6 +5,7 @@ export interface ProposedEntry {
   entry: UpgradeEntry
   confidence: 'auto' | 'suggested' | 'unknown'
   reason: string
+  sources: string[]
 }
 
 const NON_CHAT_PATTERN =
@@ -175,6 +176,7 @@ function parseModelFamily(id: string): { family: string; date: string; suffix: s
 export function detectSafeUpgrades(
   newIds: string[],
   map: UpgradeMap,
+  sourceMap?: Map<string, string[]>,
 ): ProposedEntry[] {
   const proposed: ProposedEntry[] = []
 
@@ -197,6 +199,7 @@ export function detectSafeUpgrades(
         entry: { safe: newId, major: existingEntry.major },
         confidence: 'auto',
         reason: `Same family "${parsed.family}", newer date ${parsed.date} > ${existingParsed.date}`,
+        sources: sourceMap?.get(newId) ?? [],
       })
     }
   }
@@ -229,6 +232,7 @@ function isHigherVersion(a: number[], b: number[]): boolean {
 export function suggestMajorUpgrades(
   newIds: string[],
   map: UpgradeMap,
+  sourceMap?: Map<string, string[]>,
 ): ProposedEntry[] {
   const proposed: ProposedEntry[] = []
 
@@ -254,6 +258,7 @@ export function suggestMajorUpgrades(
         entry: { safe: existingEntry.safe, major: newId },
         confidence: 'suggested',
         reason: `Same line "${parsed.line}", higher version ${parsed.version.join('.')} > ${existingParsed.version.join('.')}`,
+        sources: sourceMap?.get(newId) ?? [],
       })
     }
   }
@@ -271,11 +276,12 @@ export function generateReport(
     lines.push('No new upgrade paths discovered.\n')
   } else {
     lines.push(`Found ${String(proposed.length)} proposed upgrade path(s):\n`)
-    lines.push('| Model | Safe | Major | Confidence | Reason |')
-    lines.push('|-------|------|-------|------------|--------|')
+    lines.push('| Model | Safe | Major | Confidence | Source | Reason |')
+    lines.push('|-------|------|-------|------------|--------|--------|')
     for (const p of proposed) {
+      const src = p.sources.length > 0 ? p.sources.join(', ') : '-'
       lines.push(
-        `| \`${p.key}\` | ${p.entry.safe ?? '-'} | ${p.entry.major ?? '-'} | ${p.confidence} | ${p.reason} |`,
+        `| \`${p.key}\` | ${p.entry.safe ?? '-'} | ${p.entry.major ?? '-'} | ${p.confidence} | ${src} | ${p.reason} |`,
       )
     }
     lines.push('')
