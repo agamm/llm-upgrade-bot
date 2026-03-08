@@ -50,6 +50,16 @@ async function main() {
   const knownKeys = new Set(Object.keys(map))
 
   console.log(`Loaded ${String(knownKeys.size)} known model entries`)
+
+  // Require all provider API keys (except OpenRouter which works without auth)
+  const missing = PROVIDER_CONFIGS
+    .filter((c) => c.name !== 'OpenRouter' && !process.env[c.envVar])
+    .map((c) => c.envVar)
+  if (missing.length > 0) {
+    console.error(`Missing required env vars: ${missing.join(', ')}`)
+    process.exit(1)
+  }
+
   console.log(`Fetching models from ${String(PROVIDER_CONFIGS.length)} providers...`)
 
   const { models, skipped } = await fetchAllProviderModels()
