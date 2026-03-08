@@ -51,9 +51,10 @@ async function main() {
 
   console.log(`Loaded ${String(knownKeys.size)} known model entries`)
 
-  // Require all provider API keys (except OpenRouter which works without auth)
+  // Require all provider API keys (OpenRouter works without auth, xAI optional — no billing yet)
+  const optional = new Set(['OpenRouter', 'xAI'])
   const missing = PROVIDER_CONFIGS
-    .filter((c) => c.name !== 'OpenRouter' && !process.env[c.envVar])
+    .filter((c) => !optional.has(c.name) && !process.env[c.envVar])
     .map((c) => c.envVar)
   if (missing.length > 0) {
     console.error(`Missing required env vars: ${missing.join(', ')}`)
@@ -64,11 +65,12 @@ async function main() {
 
   const { models, skipped } = await fetchAllProviderModels()
 
-  if (skipped.length > 0) {
-    for (const s of skipped) {
-      console.error(`  FAILED: ${s}`)
-    }
-    console.error(`${String(skipped.length)} provider(s) failed. Aborting.`)
+  const requiredFailures = skipped.filter((s) => !optional.has(s.split(':')[0] ?? ''))
+  for (const s of skipped) {
+    console.warn(`  Skipped: ${s}`)
+  }
+  if (requiredFailures.length > 0) {
+    console.error(`${String(requiredFailures.length)} required provider(s) failed. Aborting.`)
     process.exit(1)
   }
 
