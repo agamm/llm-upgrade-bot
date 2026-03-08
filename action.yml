@@ -63,23 +63,8 @@ runs:
           exit "$exit_code"
         fi
 
-    - name: Check for existing PR
-      if: steps.scan.outputs.upgrades-found == 'true'
-      id: dedup
-      shell: bash
-      env:
-        GH_TOKEN: ${{ inputs.token }}
-      run: |
-        prs=$(gh pr list --head "llm-upgrade-bot/upgrades" --state all --json state,mergedAt --jq '[.[] | select(.state == "OPEN" or (.state == "CLOSED" and .mergedAt == null))] | length')
-        if [ "$prs" -gt 0 ]; then
-          echo "skip=true" >> "$GITHUB_OUTPUT"
-          echo "Existing open or rejected PR found. Skipping."
-        else
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-        fi
-
     - name: Generate PR body
-      if: steps.scan.outputs.upgrades-found == 'true' && steps.dedup.outputs.skip != 'true'
+      if: steps.scan.outputs.upgrades-found == 'true'
       id: pr-body
       shell: bash
       run: |
@@ -99,7 +84,7 @@ runs:
         } >> "$GITHUB_OUTPUT"
 
     - name: Apply fixes
-      if: steps.scan.outputs.upgrades-found == 'true' && steps.dedup.outputs.skip != 'true'
+      if: steps.scan.outputs.upgrades-found == 'true'
       shell: bash
       run: |
         ext_flag=""
@@ -113,7 +98,7 @@ runs:
         node "${{ github.action_path }}/dist/cli.js" "${{ inputs.directory }}" --fix $ext_flag $inc_flag
 
     - name: Create Pull Request
-      if: steps.scan.outputs.upgrades-found == 'true' && steps.dedup.outputs.skip != 'true'
+      if: steps.scan.outputs.upgrades-found == 'true'
       id: create-pr
       uses: peter-evans/create-pull-request@v8
       with:
