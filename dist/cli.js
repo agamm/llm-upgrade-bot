@@ -4072,7 +4072,7 @@ async function runScan(dir, options) {
   }
   if (options.prBody) {
     process.stdout.write(formatPrBody(report));
-    process.exit(report.matches.length > 0 ? 1 : 0);
+    process.exit(0);
     return;
   }
   if (options.fix) {

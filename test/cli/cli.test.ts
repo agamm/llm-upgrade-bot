@@ -195,12 +195,10 @@ describe('CLI --json mode', () => {
 // ─── PR Body Mode ───────────────────────────────────────────────────────────
 
 describe('CLI --pr-body mode', () => {
-  it('outputs markdown table with upgrade info and exits code 1', () => {
-    const { stdout, exitCode } = runCli([FIXTURE_DIR, '--pr-body'], {
-      expectFail: true,
-    })
+  it('outputs markdown table with upgrade info and exits code 0', () => {
+    const { stdout, exitCode } = runCli([FIXTURE_DIR, '--pr-body'])
 
-    expect(exitCode).toBe(1)
+    expect(exitCode).toBe(0)
     expect(stdout).toContain('## LLM Model Upgrades')
     expect(stdout).toContain('| File | Line | Model | Upgrade | Tier |')
     expect(stdout).toContain('api.ts')
@@ -208,7 +206,7 @@ describe('CLI --pr-body mode', () => {
   })
 
   it('contains no ANSI color codes', () => {
-    const { stdout } = runCli([FIXTURE_DIR, '--pr-body'], { expectFail: true })
+    const { stdout } = runCli([FIXTURE_DIR, '--pr-body'])
 
     // eslint-disable-next-line no-control-regex
     expect(stdout).not.toMatch(/\x1b\[/)
