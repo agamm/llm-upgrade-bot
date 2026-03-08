@@ -45,6 +45,11 @@ jobs:
       - uses: agamm/llm-upgrade-bot@v1
 ```
 
+> **Note:** You need to enable **"Allow GitHub Actions to create and approve pull requests"** in your repo settings (Settings → Actions → General), otherwise the PR step will fail. You can also enable it via CLI:
+> ```bash
+> gh api repos/OWNER/REPO/actions/permissions/workflow -X PUT -f can_approve_pull_request_reviews=true -f default_workflow_permissions=write
+> ```
+
 ## CLI usage
 
 ```bash

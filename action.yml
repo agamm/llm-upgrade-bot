@@ -109,3 +109,13 @@ runs:
         body: ${{ steps.pr-body.outputs.body }}
         commit-message: 'chore: upgrade outdated LLM model strings'
         delete-branch: true
+
+    - name: Help on PR failure
+      if: failure() && steps.create-pr.outcome == 'failure'
+      shell: bash
+      run: |
+        echo "::error::Failed to create pull request. Make sure you have enabled:"
+        echo "::error::  1. Settings → Actions → General → 'Allow GitHub Actions to create and approve pull requests'"
+        echo "::error::  2. The workflow has 'permissions: contents: write' and 'pull-requests: write'"
+        echo "::error::See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository"
+        exit 1
