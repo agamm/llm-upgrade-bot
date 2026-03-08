@@ -11,7 +11,7 @@ $ llm-upgrade-bot ./src
     -> safe:  gpt-4o-2024-11-20
     -> major: gpt-5.4
 
-  src/config.yaml:5  "claude-opus-4-6"
+  src/config.yaml:5  "claude-3-opus-20240229"
     -> major: claude-opus-4-6
 
   Found 2 upgradable models in 2 files
