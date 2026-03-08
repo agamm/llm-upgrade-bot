@@ -64,15 +64,11 @@ async function main() {
 
   const { models, skipped } = await fetchAllProviderModels()
 
-  for (const s of skipped) {
-    console.warn(`  Skipped: ${s}`)
-  }
-
-  // Bail if no providers responded at all
-  const providerCount = Object.keys(models).length
-  if (providerCount === 0) {
-    console.error('No providers responded. Aborting.')
-    await writeFile(REPORT_PATH, generateReport([], skipped), 'utf-8')
+  if (skipped.length > 0) {
+    for (const s of skipped) {
+      console.error(`  FAILED: ${s}`)
+    }
+    console.error(`${String(skipped.length)} provider(s) failed. Aborting.`)
     process.exit(1)
   }
 
