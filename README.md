@@ -59,10 +59,15 @@ npx llm-upgrade-bot . --extensions ".txt,.rst"  # add extra file types
 
 ## How it works
 
-1. **Scan** -- walks your files and matches model strings against an [upgrade map](data/upgrades.json) of 200+ entries
-2. **Classify** -- each match gets a **safe** upgrade (same family, newer version) and/or a **major** upgrade (next-gen model)
-3. **Fix** -- rewrites files in-place, preferring safe upgrades
-4. **PR** -- as a GitHub Action, creates a PR with a summary table of all changes
+We continuously scan model APIs (OpenAI, Anthropic, Google, DeepSeek, Together AI, Groq, and more) every hour to detect new models and automatically update our [upgrade map](data/upgrades.json). You don't need to supply any API keys -- we take care of keeping the model data fresh.
+
+When the action runs in your repo, it:
+
+1. **Fetches** the latest upgrade map with 200+ model entries (always up-to-date)
+2. **Scans** your files and matches model strings against it
+3. **Classifies** each match as a **safe** upgrade (same family, newer version) and/or a **major** upgrade (next-gen model)
+4. **Fixes** files in-place, preferring safe upgrades
+5. **Opens a PR** with a summary table of all changes
 
 | Tier | Meaning | Example |
 |------|---------|---------|
@@ -71,7 +76,7 @@ npx llm-upgrade-bot . --extensions ".txt,.rst"  # add extra file types
 
 ## Supported models
 
-OpenAI, Anthropic, Google, xAI (Grok), Meta (Llama), Mistral, DeepSeek, Moonshot (Kimi), Cohere (Command), Alibaba (Qwen), MiniMax -- including prefixed variants for OpenRouter, AWS Bedrock, and LiteLLM.
+OpenAI, Anthropic, Google, xAI (Grok), Meta (Llama), Mistral, DeepSeek, Moonshot (Kimi), Alibaba (Qwen), MiniMax -- including prefixed variants for OpenRouter, AWS Bedrock, LiteLLM, Together AI, and Groq.
 
 See the full [upgrade map](data/upgrades.json).
 
