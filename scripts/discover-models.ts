@@ -97,8 +97,30 @@ async function main() {
     map[p.key] = p.entry
   }
 
-  // Write updated map (preserve compact format)
-  await writeFile(UPGRADES_PATH, JSON.stringify(map, null, 2) + '\n', 'utf-8')
+  // Write updated map — preserve compact one-line-per-entry format
+  // Read original to patch in-place, keeping blank-line grouping intact
+  const lines = raw.split('\n')
+  const updatedKeys = new Set(allProposed.map((p) => p.key))
+  const result: string[] = []
+
+  for (const line of lines) {
+    // Match existing entries: `  "model-id": { ... }`
+    const keyMatch = /^\s+"([^"]+)":\s*\{/.exec(line)
+    if (keyMatch && updatedKeys.has(keyMatch[1])) {
+      const key = keyMatch[1]
+      const entry = map[key]
+      if (entry) {
+        const safe = entry.safe === null ? 'null' : `"${entry.safe}"`
+        const major = entry.major === null ? 'null' : `"${entry.major}"`
+        const comma = line.trimEnd().endsWith(',') ? ',' : ''
+        result.push(`  "${key}": { "safe": ${safe}, "major": ${major} }${comma}`)
+        continue
+      }
+    }
+    result.push(line)
+  }
+
+  await writeFile(UPGRADES_PATH, result.join('\n'), 'utf-8')
 
   // Write report
   const report = generateReport(allProposed, skipped)
