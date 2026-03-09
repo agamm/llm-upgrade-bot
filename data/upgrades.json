@@ -1,4 +1,6 @@
 {
+  "_pinned": [],
+
   "gpt-3.5-turbo": { "safe": null, "major": "gpt-5-mini" },
   "gpt-3.5-turbo-instruct": { "safe": null, "major": "gpt-5-mini" },
   "gpt-3.5-turbo-0125": { "safe": null, "major": "gpt-5-mini" },

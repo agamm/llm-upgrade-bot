@@ -12,5 +12,7 @@ export const UPGRADES_PATH = join(
 
 export async function loadRealMap(): Promise<UpgradeMap> {
   const raw = await readFile(UPGRADES_PATH, 'utf-8')
-  return JSON.parse(raw) as UpgradeMap
+  const parsed = JSON.parse(raw) as Record<string, unknown>
+  delete parsed['_pinned']
+  return parsed as UpgradeMap
 }

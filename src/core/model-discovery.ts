@@ -1,4 +1,5 @@
 import type { UpgradeEntry, UpgradeMap, ProviderConfig, Result } from './types.js'
+import { parseModelVersion, isHigherVersion } from './model-version.js'
 
 export interface ProposedEntry {
   key: string
@@ -212,27 +213,6 @@ export function detectSafeUpgrades(
   return proposed
 }
 
-const VERSION_PATTERN = /^(.+?)[-_]?v?(\d+(?:\.\d+)*)(.*)$/
-
-function parseModelVersion(id: string): { line: string; version: number[]; suffix: string } | null {
-  const match = VERSION_PATTERN.exec(id)
-  if (!match) return null
-  const [, line = '', versionStr = '', suffix = ''] = match
-  const version = versionStr.split('.').map(Number)
-  if (version.some(isNaN)) return null
-  return { line, version, suffix }
-}
-
-function isHigherVersion(a: number[], b: number[]): boolean {
-  const len = Math.max(a.length, b.length)
-  for (let i = 0; i < len; i++) {
-    const av = a[i] ?? 0
-    const bv = b[i] ?? 0
-    if (av > bv) return true
-    if (av < bv) return false
-  }
-  return false
-}
 
 export function suggestMajorUpgrades(
   newIds: string[],
@@ -251,13 +231,13 @@ export function suggestMajorUpgrades(
         if (!currentMajorParsed) continue
         if (currentMajorParsed.line !== parsed.line) continue
         if (!isHigherVersion(parsed.version, currentMajorParsed.version)) continue
-        if (currentMajorParsed.suffix !== parsed.suffix) continue
+        if (currentMajorParsed.tier !== parsed.tier) continue
       }
 
       const existingParsed = parseModelVersion(existingKey)
       if (!existingParsed) continue
       if (existingParsed.line !== parsed.line) continue
-      if (existingParsed.suffix !== parsed.suffix) continue
+      if (existingParsed.tier !== parsed.tier) continue
       if (!isHigherVersion(parsed.version, existingParsed.version)) continue
       // Skip if version looks like a date (YYMM or YYYYMM)
       if (existingParsed.version.length === 1 && (existingParsed.version[0] ?? 0) > 1000) continue

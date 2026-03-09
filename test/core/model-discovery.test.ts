@@ -114,6 +114,34 @@ describe('suggestMajorUpgrades', () => {
     const newIds = ['gpt-6-mini']
     expect(suggestMajorUpgrades(newIds, map)).toEqual([])
   })
+
+  it('matches fuzzy suffixes: gemini-2.0-flash → gemini-3-flash-preview', () => {
+    const map: UpgradeMap = {
+      'gemini-2.0-flash': { safe: null, major: null },
+    }
+    const newIds = ['gemini-3-flash-preview']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('gemini-3-flash-preview')
+  })
+
+  it('does not match across different tiers: flash vs flash-lite', () => {
+    const map: UpgradeMap = {
+      'gemini-2.0-flash': { safe: null, major: null },
+    }
+    const newIds = ['gemini-3-flash-lite-preview']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
+  it('matches flagship tiers: gpt-4o → gpt-5.4 (both tier "")', () => {
+    const map: UpgradeMap = {
+      'gpt-4o': { safe: null, major: null },
+    }
+    const newIds = ['gpt-5.4']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('gpt-5.4')
+  })
 })
 
 describe('generateReport', () => {

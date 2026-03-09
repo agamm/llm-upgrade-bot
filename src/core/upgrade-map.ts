@@ -3,22 +3,19 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { UpgradeEntry, UpgradeMap, Result } from './types.js'
 
-function resolveDefaultPath(): string[] {
-  // ESM: use import.meta.url to derive the directory
-  // CJS: tsup rewrites to __dirname at build time
+function resolveDefaultPaths(): string[] {
   const dir =
     typeof __dirname !== 'undefined'
       ? __dirname
       : dirname(fileURLToPath(import.meta.url))
-  // When running from src/core/, go up two levels to project root.
-  // When bundled into dist/, go up one level to project root.
+  // src/core/ → ../../data, dist/ → ../data
   return [
     join(dir, '..', '..', 'data', 'upgrades.json'),
     join(dir, '..', 'data', 'upgrades.json'),
   ]
 }
 
-const DEFAULT_FALLBACK_PATHS = resolveDefaultPath()
+const DEFAULT_UPGRADE_PATHS = resolveDefaultPaths()
 
 interface LoadOptions {
   url?: string
@@ -37,7 +34,9 @@ function parseUpgradeMap(text: string): Result<UpgradeMap> {
     return { ok: false, error: 'Failed to parse JSON: expected an object' }
   }
 
-  return { ok: true, data: parsed as UpgradeMap }
+  const data = parsed as Record<string, unknown>
+  delete data['_pinned']
+  return { ok: true, data: data as UpgradeMap }
 }
 
 async function loadFromFile(path: string): Promise<Result<UpgradeMap>> {
@@ -90,14 +89,12 @@ export async function loadUpgradeMap(
 ): Promise<Result<UpgradeMap>> {
   const fallbackPaths = options?.fallbackPath
     ? [options.fallbackPath]
-    : DEFAULT_FALLBACK_PATHS
+    : DEFAULT_UPGRADE_PATHS
   const url = options?.url
 
   if (url) {
-    const urlResult = await loadFromUrl(url)
-    if (urlResult.ok) return urlResult
-
-    // Fall back to file(s)
+    const result = await loadFromUrl(url)
+    if (result.ok) return result
     return loadFromPaths(fallbackPaths)
   }
 

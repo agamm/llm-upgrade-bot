@@ -2,14 +2,14 @@
 import { readFile } from "fs/promises";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-function resolveDefaultPath() {
+function resolveDefaultPaths() {
   const dir = typeof __dirname !== "undefined" ? __dirname : dirname(fileURLToPath(import.meta.url));
   return [
     join(dir, "..", "..", "data", "upgrades.json"),
     join(dir, "..", "data", "upgrades.json")
   ];
 }
-var DEFAULT_FALLBACK_PATHS = resolveDefaultPath();
+var DEFAULT_UPGRADE_PATHS = resolveDefaultPaths();
 function parseUpgradeMap(text) {
   let parsed;
   try {
@@ -20,7 +20,9 @@ function parseUpgradeMap(text) {
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     return { ok: false, error: "Failed to parse JSON: expected an object" };
   }
-  return { ok: true, data: parsed };
+  const data = parsed;
+  delete data["_pinned"];
+  return { ok: true, data };
 }
 async function loadFromFile(path) {
   let text;
@@ -59,11 +61,11 @@ async function loadFromPaths(paths) {
   return { ok: false, error: lastError };
 }
 async function loadUpgradeMap(options) {
-  const fallbackPaths = options?.fallbackPath ? [options.fallbackPath] : DEFAULT_FALLBACK_PATHS;
+  const fallbackPaths = options?.fallbackPath ? [options.fallbackPath] : DEFAULT_UPGRADE_PATHS;
   const url = options?.url;
   if (url) {
-    const urlResult = await loadFromUrl(url);
-    if (urlResult.ok) return urlResult;
+    const result = await loadFromUrl(url);
+    if (result.ok) return result;
     return loadFromPaths(fallbackPaths);
   }
   return loadFromPaths(fallbackPaths);
@@ -504,6 +506,53 @@ function validateUpgradeMap(map, rules = [OPENROUTER_RULE]) {
   return { ok: true, data: void 0 };
 }
 
+// src/core/model-version.ts
+var TIER_TOKENS = /* @__PURE__ */ new Set([
+  "mini",
+  "nano",
+  "micro",
+  "flash",
+  "lite",
+  "turbo",
+  "fast",
+  "pro",
+  "plus",
+  "ultra",
+  "max",
+  "sonnet",
+  "haiku",
+  "opus",
+  "instruct",
+  "chat",
+  "coder",
+  "large",
+  "medium",
+  "small",
+  "nemo"
+]);
+function tierOf(suffix) {
+  return suffix.split("-").filter((t) => TIER_TOKENS.has(t)).sort().join("-");
+}
+var VERSION_PATTERN = /^(.+?)[-_]?v?(\d+(?:\.\d+)*)(.*)$/;
+function parseModelVersion(id) {
+  const match = VERSION_PATTERN.exec(id);
+  if (!match) return null;
+  const [, line = "", versionStr = "", suffix = ""] = match;
+  const version = versionStr.split(".").map(Number);
+  if (version.some(isNaN)) return null;
+  return { line, version, suffix, tier: tierOf(suffix) };
+}
+function isHigherVersion(a, b) {
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    const av = a[i] ?? 0;
+    const bv = b[i] ?? 0;
+    if (av > bv) return true;
+    if (av < bv) return false;
+  }
+  return false;
+}
+
 // src/core/model-discovery.ts
 var NON_CHAT_PATTERN = /embed|rerank|tts|whisper|dall-e|image|moderat|guard|diffusion|flux|veo|imagen|safety|jamba-1\.5/i;
 var PROVIDER_CONFIGS = [
@@ -669,25 +718,6 @@ function detectSafeUpgrades(newIds, map, sourceMap) {
   }
   return proposed;
 }
-var VERSION_PATTERN = /^(.+?)[-_]?v?(\d+(?:\.\d+)*)(.*)$/;
-function parseModelVersion(id) {
-  const match = VERSION_PATTERN.exec(id);
-  if (!match) return null;
-  const [, line = "", versionStr = "", suffix = ""] = match;
-  const version = versionStr.split(".").map(Number);
-  if (version.some(isNaN)) return null;
-  return { line, version, suffix };
-}
-function isHigherVersion(a, b) {
-  const len = Math.max(a.length, b.length);
-  for (let i = 0; i < len; i++) {
-    const av = a[i] ?? 0;
-    const bv = b[i] ?? 0;
-    if (av > bv) return true;
-    if (av < bv) return false;
-  }
-  return false;
-}
 function suggestMajorUpgrades(newIds, map, sourceMap) {
   const proposed = [];
   for (const newId of newIds) {
@@ -699,12 +729,12 @@ function suggestMajorUpgrades(newIds, map, sourceMap) {
         if (!currentMajorParsed) continue;
         if (currentMajorParsed.line !== parsed.line) continue;
         if (!isHigherVersion(parsed.version, currentMajorParsed.version)) continue;
-        if (currentMajorParsed.suffix !== parsed.suffix) continue;
+        if (currentMajorParsed.tier !== parsed.tier) continue;
       }
       const existingParsed = parseModelVersion(existingKey);
       if (!existingParsed) continue;
       if (existingParsed.line !== parsed.line) continue;
-      if (existingParsed.suffix !== parsed.suffix) continue;
+      if (existingParsed.tier !== parsed.tier) continue;
       if (!isHigherVersion(parsed.version, existingParsed.version)) continue;
       if (existingParsed.version.length === 1 && (existingParsed.version[0] ?? 0) > 1e3) continue;
       if (existingEntry.safe === newId) continue;

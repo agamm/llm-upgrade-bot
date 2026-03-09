@@ -3563,14 +3563,14 @@ import { performance } from "perf_hooks";
 import { readFile } from "fs/promises";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-function resolveDefaultPath() {
+function resolveDefaultPaths() {
   const dir = typeof __dirname !== "undefined" ? __dirname : dirname(fileURLToPath(import.meta.url));
   return [
     join(dir, "..", "..", "data", "upgrades.json"),
     join(dir, "..", "data", "upgrades.json")
   ];
 }
-var DEFAULT_FALLBACK_PATHS = resolveDefaultPath();
+var DEFAULT_UPGRADE_PATHS = resolveDefaultPaths();
 function parseUpgradeMap(text) {
   let parsed;
   try {
@@ -3581,7 +3581,9 @@ function parseUpgradeMap(text) {
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     return { ok: false, error: "Failed to parse JSON: expected an object" };
   }
-  return { ok: true, data: parsed };
+  const data = parsed;
+  delete data["_pinned"];
+  return { ok: true, data };
 }
 async function loadFromFile(path) {
   let text;
@@ -3620,11 +3622,11 @@ async function loadFromPaths(paths) {
   return { ok: false, error: lastError };
 }
 async function loadUpgradeMap(options) {
-  const fallbackPaths = options?.fallbackPath ? [options.fallbackPath] : DEFAULT_FALLBACK_PATHS;
+  const fallbackPaths = options?.fallbackPath ? [options.fallbackPath] : DEFAULT_UPGRADE_PATHS;
   const url = options?.url;
   if (url) {
-    const urlResult = await loadFromUrl(url);
-    if (urlResult.ok) return urlResult;
+    const result = await loadFromUrl(url);
+    if (result.ok) return result;
     return loadFromPaths(fallbackPaths);
   }
   return loadFromPaths(fallbackPaths);

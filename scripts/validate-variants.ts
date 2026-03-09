@@ -7,7 +7,9 @@ const UPGRADES_PATH = join(import.meta.dirname, '..', 'data', 'upgrades.json')
 
 async function main() {
   const raw = await readFile(UPGRADES_PATH, 'utf-8')
-  const map: UpgradeMap = JSON.parse(raw)
+  const parsed = JSON.parse(raw) as Record<string, unknown>
+  delete parsed['_pinned']
+  const map = parsed as UpgradeMap
 
   console.log(`Validating ${String(Object.keys(map).length)} entries...`)
 

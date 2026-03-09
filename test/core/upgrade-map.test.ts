@@ -158,6 +158,16 @@ describe('loadUpgradeMap', () => {
   })
 })
 
+describe('_pinned filtering', () => {
+  it('strips _pinned array from loaded map', async () => {
+    const result = await loadUpgradeMap()
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.data['_pinned' as keyof typeof result.data]).toBeUndefined()
+  })
+})
+
 describe('lookupModel', () => {
   let map: UpgradeMap
 

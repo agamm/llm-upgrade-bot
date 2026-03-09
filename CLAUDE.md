@@ -24,7 +24,7 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - `src/cli/` — Commander.js commands, terminal output (picocolors + nanospinner)
 - `action.yml` — composite GitHub Action (no src/action/ dir, delegates to CLI + peter-evans/create-pull-request)
 - Dependency direction: cli/ → core/. Core never imports from cli.
-- `data/upgrades.json` — flat map `{ "old-model": { "safe": "...", "major": "..." } }`
+- `data/upgrades.json` — auto-discovered flat map `{ "old-model": { "safe": "...", "major": "..." } }` with `_pinned` array for manually curated keys that discovery won't overwrite
 
 ## Guardrails
 - **Max file:** 200 lines — refactor before exceeding
@@ -43,8 +43,9 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - Exit code: 0 = no upgrades, 1 = upgrades available
 - Provider variants: Native, OpenRouter (covers LiteLLM + Vercel), Bedrock, Together AI (PascalCase), Groq (custom aliases)
 - `variant-validator` checks cross-variant consistency (OpenRouter entries match native)
+- `model-version` parses version strings and normalizes suffixes to canonical tiers via positive allowlist (TIER_TOKENS); noise words like `-preview`, `-latest` are auto-ignored
 - `model-discovery` fetches 7 provider APIs, diffs, detects safe/major upgrades via date/version heuristics; sanitizes error messages to prevent API key leaks
-- Discovery refreshes stale major targets: if a newer model in the same line/suffix is found, it proposes updating the existing major target
+- Discovery refreshes stale major targets: if a newer model in the same line/tier is found, it proposes updating the existing major target
 - "major" tier targets the **latest** model in the same capability tier (e.g. flagship→flagship), not just one generation ahead
 - `.github/workflows/discover-models.yml` — hourly auto-discovery, opens PR via peter-evans/create-pull-request (only commits upgrades.json, report goes in PR body)
 
@@ -63,7 +64,7 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - **Breaking changes** (action input/output removals, behavior changes): bump major tag (`v2`)
 - `dist/` is in `.gitignore` but force-tracked — the composite action runs `node $ACTION_PATH/dist/cli.js`
 - `action.yml` has `branding` for Marketplace (icon: refresh-cw, color: blue)
-- Current version: **v1.2.0**
+- Current version: **v1.4.0**
 
 ## Gotchas
 - picocolors uses nesting `pc.bold(pc.red(...))` not chaining

@@ -46,9 +46,17 @@ function deduplicateProposals(proposals: ProposedEntry[]): ProposedEntry[] {
 
 async function main() {
   const raw = await readFile(UPGRADES_PATH, 'utf-8')
-  const map: UpgradeMap = JSON.parse(raw)
+  const parsed = JSON.parse(raw) as Record<string, unknown>
+  const pinnedKeys = new Set<string>(
+    Array.isArray(parsed['_pinned']) ? (parsed['_pinned'] as string[]) : [],
+  )
+  delete parsed['_pinned']
+  const map = parsed as UpgradeMap
   const knownKeys = new Set(Object.keys(map))
 
+  if (pinnedKeys.size > 0) {
+    console.log(`Loaded ${String(pinnedKeys.size)} pinned keys (protected)`)
+  }
   console.log(`Loaded ${String(knownKeys.size)} known model entries`)
 
   // Require all provider API keys (some optional — see GitHub issues)
@@ -97,10 +105,11 @@ async function main() {
     process.exit(0)
   }
 
-  // Detect upgrades and deduplicate
+  // Detect upgrades, deduplicate, and exclude pinned keys
   const safeProposed = detectSafeUpgrades(newModels, map, sourceMap)
   const majorProposed = suggestMajorUpgrades(newModels, map, sourceMap)
   const allProposed = deduplicateProposals([...safeProposed, ...majorProposed])
+    .filter((p) => !pinnedKeys.has(p.key))
 
   console.log(
     `Proposed: ${String(safeProposed.length)} safe, ${String(majorProposed.length)} major (${String(allProposed.length)} after dedup)`,
