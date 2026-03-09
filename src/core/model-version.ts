@@ -10,7 +10,7 @@ const TIER_TOKENS = new Set([
   'flash', 'lite', 'turbo', 'fast',
   'pro', 'plus', 'ultra', 'max',
   'sonnet', 'haiku', 'opus',
-  'instruct', 'chat', 'coder',
+  'instruct', 'chat', 'coder', 'codex',
   'large', 'medium', 'small', 'nemo',
 ])
 

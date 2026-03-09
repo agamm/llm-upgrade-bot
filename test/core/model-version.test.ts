@@ -16,6 +16,7 @@ describe('tierOf', () => {
     ['o-mini', 'mini'],
     ['-flash-20251001', 'flash'],
     ['-turbo-instruct', 'instruct-turbo'],
+    ['-codex-mini', 'codex-mini'],
   ])('tierOf(%j) → %j', (suffix, expected) => {
     expect(tierOf(suffix)).toBe(expected)
   })

@@ -571,6 +571,7 @@ var TIER_TOKENS = /* @__PURE__ */ new Set([
   "instruct",
   "chat",
   "coder",
+  "codex",
   "large",
   "medium",
   "small",

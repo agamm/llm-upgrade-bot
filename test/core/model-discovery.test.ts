@@ -143,6 +143,14 @@ describe('suggestMajorUpgrades', () => {
     expect(proposed[0]?.entry.major).toBe('gemini-3-flash-preview')
   })
 
+  it('does not match codex model as upgrade for general-purpose mini', () => {
+    const map: UpgradeMap = {
+      'gpt-4o-mini': { safe: null, major: 'gpt-5-mini' },
+    }
+    const newIds = ['gpt-5.1-codex-mini']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
   it('does not match across different tiers: flash vs flash-lite', () => {
     const map: UpgradeMap = {
       'gemini-2.0-flash': { safe: null, major: null },
