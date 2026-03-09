@@ -108,6 +108,8 @@
   "gemini-2.5-pro": { "safe": null, "major": "gemini-3.1-pro-preview" },
   "gemini-2.5-flash": { "safe": null, "major": "gemini-3-flash-preview" },
   "gemini-2.5-flash-lite": { "safe": null, "major": "gemini-3.1-flash-lite-preview" },
+  "gemini-3-pro-preview": { "safe": "gemini-3.1-pro-preview", "major": null },
+  "gemini-3-flash-preview": { "safe": "gemini-3.1-flash-preview", "major": null },
   "text-embedding-004": { "safe": "text-embedding-005", "major": "gemini-embedding-001" },
   "imagen-3.0-generate-001": { "safe": "imagen-3.0-generate-002", "major": "imagen-4.0-generate-001" },
   "imagen-3.0-generate-002": { "safe": null, "major": "imagen-4.0-generate-001" },
@@ -203,6 +205,8 @@
   "google/gemini-2.0-flash": { "safe": null, "major": "google/gemini-3-flash-preview" },
   "google/gemini-2.5-pro": { "safe": null, "major": "google/gemini-3.1-pro-preview" },
   "google/gemini-2.5-flash": { "safe": null, "major": "google/gemini-3-flash-preview" },
+  "google/gemini-3-pro-preview": { "safe": "google/gemini-3.1-pro-preview", "major": null },
+  "google/gemini-3-flash-preview": { "safe": "google/gemini-3.1-flash-preview", "major": null },
 
   "mistralai/open-mistral-nemo": { "safe": null, "major": "mistralai/mistral-small-latest" },
   "mistralai/open-mistral-7b": { "safe": null, "major": "mistralai/mistral-small-latest" },
@@ -250,6 +254,8 @@
   "gemini/gemini-1.5-pro": { "safe": null, "major": "gemini/gemini-3.1-pro-preview" },
   "gemini/gemini-1.5-flash": { "safe": null, "major": "gemini/gemini-3-flash-preview" },
   "gemini/gemini-2.0-flash": { "safe": null, "major": "gemini/gemini-3-flash-preview" },
+  "gemini/gemini-3-pro-preview": { "safe": "gemini/gemini-3.1-pro-preview", "major": null },
+  "gemini/gemini-3-flash-preview": { "safe": "gemini/gemini-3.1-flash-preview", "major": null },
 
   "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo": { "safe": null, "major": "meta-llama/Llama-4-Scout-17B-16E-Instruct" },
   "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo": { "safe": "meta-llama/Llama-3.3-70B-Instruct-Turbo", "major": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8" },
