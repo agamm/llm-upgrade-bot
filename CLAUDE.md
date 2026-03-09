@@ -64,7 +64,7 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - **Breaking changes** (action input/output removals, behavior changes): bump major tag (`v2`)
 - `dist/` is in `.gitignore` but force-tracked — the composite action runs `node $ACTION_PATH/dist/cli.js`
 - `action.yml` has `branding` for Marketplace (icon: refresh-cw, color: blue)
-- Current version: **v1.4.0**
+- Current version: **v1.5.0**
 
 ## Gotchas
 - picocolors uses nesting `pc.bold(pc.red(...))` not chaining
