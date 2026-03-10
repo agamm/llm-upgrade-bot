@@ -217,14 +217,19 @@ export function detectSafeUpgrades(
 
 interface HighestModel { version: number[]; key: string }
 
-/** O(map_size) index: highest version per line+tier across all map keys. */
+/** Build a stable key for matching: line + tier + semantic attributes. */
+function attrKey(p: { line: string; tier: string; paramSize?: string; contextSize?: string; quantization?: string }): string {
+  return `${p.line}|${p.tier}|${p.paramSize ?? ''}|${p.contextSize ?? ''}|${p.quantization ?? ''}`
+}
+
+/** O(map_size) index: highest version per line+tier+attributes across all map keys. */
 function buildHighestIndex(map: UpgradeMap): Map<string, HighestModel> {
   const norm = normalizeVersionSeparators
   const index = new Map<string, HighestModel>()
   for (const mapKey of Object.keys(map)) {
     const parsed = parseModelVersion(norm(mapKey))
     if (!parsed) continue
-    const k = `${parsed.line}|${parsed.tier}`
+    const k = attrKey(parsed)
     const existing = index.get(k)
     if (!existing || isHigherVersion(parsed.version, existing.version)) {
       index.set(k, { version: parsed.version, key: mapKey })
@@ -259,12 +264,20 @@ export function suggestMajorUpgrades(
         if (currentMajorParsed.line !== parsed.line) continue
         if (!isHigherVersion(parsed.version, currentMajorParsed.version)) continue
         if (currentMajorParsed.tier !== parsed.tier) continue
+        // Hard constraints: param size, context size, and quantization must match
+        if (currentMajorParsed.paramSize !== parsed.paramSize) continue
+        if (currentMajorParsed.contextSize !== parsed.contextSize) continue
+        if (currentMajorParsed.quantization !== parsed.quantization) continue
       }
 
       const existingParsed = parseModelVersion(norm(existingKey))
       if (!existingParsed) continue
       if (existingParsed.line !== parsed.line) continue
       if (existingParsed.tier !== parsed.tier) continue
+      // Hard constraints: param size, context size, and quantization must match
+      if (existingParsed.paramSize !== parsed.paramSize) continue
+      if (existingParsed.contextSize !== parsed.contextSize) continue
+      if (existingParsed.quantization !== parsed.quantization) continue
       if (!isHigherVersion(parsed.version, existingParsed.version)) continue
       // Skip if version looks like a date (YYMM or YYYYMM)
       if (existingParsed.version.length === 1 && (existingParsed.version[0] ?? 0) > 1000) continue
@@ -297,7 +310,7 @@ export function suggestMajorUpgrades(
     if (map[best.proposal.key]?.major !== null) continue
     const parsed = parseModelVersion(norm(best.proposal.entry.major ?? ''))
     if (!parsed) continue
-    const highest = highestIndex.get(`${parsed.line}|${parsed.tier}`)
+    const highest = highestIndex.get(attrKey(parsed))
     if (highest && isHigherVersion(highest.version, best.version)) {
       best.proposal.entry.major = matchSeparatorStyle(highest.key, best.proposal.key)
       best.version = highest.version

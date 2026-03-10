@@ -512,8 +512,38 @@ function applyEditsToContent(content, edits) {
 
 // src/core/model-version.ts
 var NOISE_TOKENS = /* @__PURE__ */ new Set(["preview", "latest", "exp", "experimental", "beta", "o"]);
-function tierOf(suffix) {
-  return suffix.split("-").filter((t) => t !== "" && !NOISE_TOKENS.has(t) && !/^\d+$/.test(t)).sort().join("-");
+var PARAM_SIZE_RE = /^\d+[Bb]$/;
+var MOE_ACTIVE_RE = /^[Aa]\d+[Bb]$/;
+var CONTEXT_SIZE_RE = /^\d+[Kk]$/;
+var FLOAT_QUANT_RE = /^[Ff][Pp]\d+$/;
+var INT_QUANT_RE = /^[Ii][Nn][Tt]\d+$/;
+var GGUF_QUANT_RE = /^[Qq]\d+.*$/;
+function extractModelAttributes(suffix) {
+  let paramSize;
+  let contextSize;
+  let quantization;
+  const tierTokens = [];
+  for (const t of suffix.split("-")) {
+    if (t === "") continue;
+    const lower = t.toLowerCase();
+    if (NOISE_TOKENS.has(lower) || /^\d+$/.test(t)) continue;
+    if (PARAM_SIZE_RE.test(t)) {
+      paramSize = lower;
+    } else if (MOE_ACTIVE_RE.test(t)) {
+    } else if (CONTEXT_SIZE_RE.test(t)) {
+      contextSize = lower;
+    } else if (FLOAT_QUANT_RE.test(t) || INT_QUANT_RE.test(t) || GGUF_QUANT_RE.test(t)) {
+      quantization = lower;
+    } else {
+      tierTokens.push(lower);
+    }
+  }
+  return {
+    tier: tierTokens.sort().join("-"),
+    ...paramSize !== void 0 && { paramSize },
+    ...contextSize !== void 0 && { contextSize },
+    ...quantization !== void 0 && { quantization }
+  };
 }
 var VERSION_PATTERN = /^(.+?)[-_]?v?(\d+(?:\.\d+)*)(.*)$/;
 function parseModelVersion(id) {
@@ -522,22 +552,23 @@ function parseModelVersion(id) {
   const [, line = "", versionStr = "", suffix = ""] = match;
   const version = versionStr.split(".").map(Number);
   if (version.some(isNaN)) return null;
-  return { line, version, suffix, tier: tierOf(suffix) };
+  const attrs = extractModelAttributes(suffix);
+  return { line, version, suffix, ...attrs };
 }
 function isVersionSequence(seq, sep) {
   return seq.split(sep).every((p) => p.length <= 2);
 }
 function normalizeVersionSeparators(id) {
-  return id.replace(/\d+(?:-\d+)+/g, (m) => isVersionSequence(m, "-") ? m.replaceAll("-", ".") : m);
+  return id.replace(/\d+(?:-(?!\d+[bBkK])\d+)+/g, (m) => isVersionSequence(m, "-") ? m.replaceAll("-", ".") : m);
 }
 function matchSeparatorStyle(newId, referenceId) {
   const refUsesHyphen = /\d-\d/.test(referenceId);
   const refUsesDot = /\d\.\d/.test(referenceId);
   if (refUsesHyphen && !refUsesDot) {
-    return newId.replace(/\d+(?:\.\d+)+/g, (m) => isVersionSequence(m, ".") ? m.replaceAll(".", "-") : m);
+    return newId.replace(/\d+(?:\.(?!\d+[bBkK])\d+)+/g, (m) => isVersionSequence(m, ".") ? m.replaceAll(".", "-") : m);
   }
   if (refUsesDot && !refUsesHyphen) {
-    return newId.replace(/\d+(?:-\d+)+/g, (m) => isVersionSequence(m, "-") ? m.replaceAll("-", ".") : m);
+    return newId.replace(/\d+(?:-(?!\d+[bBkK])\d+)+/g, (m) => isVersionSequence(m, "-") ? m.replaceAll("-", ".") : m);
   }
   return newId;
 }
@@ -828,13 +859,16 @@ function detectSafeUpgrades(newIds, map, sourceMap) {
   }
   return proposed;
 }
+function attrKey(p) {
+  return `${p.line}|${p.tier}|${p.paramSize ?? ""}|${p.contextSize ?? ""}|${p.quantization ?? ""}`;
+}
 function buildHighestIndex(map) {
   const norm = normalizeVersionSeparators;
   const index = /* @__PURE__ */ new Map();
   for (const mapKey of Object.keys(map)) {
     const parsed = parseModelVersion(norm(mapKey));
     if (!parsed) continue;
-    const k = `${parsed.line}|${parsed.tier}`;
+    const k = attrKey(parsed);
     const existing = index.get(k);
     if (!existing || isHigherVersion(parsed.version, existing.version)) {
       index.set(k, { version: parsed.version, key: mapKey });
@@ -852,17 +886,24 @@ function suggestMajorUpgrades(newIds, map, sourceMap) {
     const parsed = parseModelVersion(norm(newId));
     if (!parsed) continue;
     for (const [existingKey, existingEntry] of Object.entries(map)) {
+      if (DATE_PATTERN.test(existingKey)) continue;
       if (existingEntry.major !== null) {
         const currentMajorParsed = parseModelVersion(norm(existingEntry.major));
         if (!currentMajorParsed) continue;
         if (currentMajorParsed.line !== parsed.line) continue;
         if (!isHigherVersion(parsed.version, currentMajorParsed.version)) continue;
         if (currentMajorParsed.tier !== parsed.tier) continue;
+        if (currentMajorParsed.paramSize !== parsed.paramSize) continue;
+        if (currentMajorParsed.contextSize !== parsed.contextSize) continue;
+        if (currentMajorParsed.quantization !== parsed.quantization) continue;
       }
       const existingParsed = parseModelVersion(norm(existingKey));
       if (!existingParsed) continue;
       if (existingParsed.line !== parsed.line) continue;
       if (existingParsed.tier !== parsed.tier) continue;
+      if (existingParsed.paramSize !== parsed.paramSize) continue;
+      if (existingParsed.contextSize !== parsed.contextSize) continue;
+      if (existingParsed.quantization !== parsed.quantization) continue;
       if (!isHigherVersion(parsed.version, existingParsed.version)) continue;
       if (existingParsed.version.length === 1 && (existingParsed.version[0] ?? 0) > 1e3) continue;
       if (existingEntry.safe === newId) continue;
@@ -886,7 +927,7 @@ function suggestMajorUpgrades(newIds, map, sourceMap) {
     if (map[best.proposal.key]?.major !== null) continue;
     const parsed = parseModelVersion(norm(best.proposal.entry.major ?? ""));
     if (!parsed) continue;
-    const highest = highestIndex.get(`${parsed.line}|${parsed.tier}`);
+    const highest = highestIndex.get(attrKey(parsed));
     if (highest && isHigherVersion(highest.version, best.version)) {
       best.proposal.entry.major = matchSeparatorStyle(highest.key, best.proposal.key);
       best.version = highest.version;

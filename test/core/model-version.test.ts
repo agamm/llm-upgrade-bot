@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { tierOf, parseModelVersion, isHigherVersion, normalizeVersionSeparators, matchSeparatorStyle } from '../../src/core/model-version.js'
+import { tierOf, extractModelAttributes, parseModelVersion, isHigherVersion, normalizeVersionSeparators, matchSeparatorStyle } from '../../src/core/model-version.js'
 
 describe('tierOf', () => {
   it.each([
@@ -20,10 +20,59 @@ describe('tierOf', () => {
     // Unknown capability words are preserved (not silently dropped)
     ['o-transcribe', 'transcribe'],
     ['-search-preview', 'search'],
-    ['-9b-it', '9b-it'],
+    ['-9b-it', 'it'],
     ['o-realtime-preview', 'realtime'],
+    ['-72B-Instruct-Turbo', 'instruct-turbo'],
+    ['-32B-FP8', ''],
+    ['-235B-A22B-fp8', ''],
+    ['-128k', ''],
+    ['-32k-instruct', 'instruct'],
   ])('tierOf(%j) → %j', (suffix, expected) => {
     expect(tierOf(suffix)).toBe(expected)
+  })
+})
+
+describe('extractModelAttributes', () => {
+  it('extracts paramSize', () => {
+    expect(extractModelAttributes('-72B-Instruct-Turbo')).toEqual({
+      tier: 'instruct-turbo', paramSize: '72b',
+    })
+  })
+
+  it('extracts contextSize', () => {
+    expect(extractModelAttributes('-32k-instruct')).toEqual({
+      tier: 'instruct', contextSize: '32k',
+    })
+  })
+
+  it('extracts quantization (fp)', () => {
+    expect(extractModelAttributes('-FP8')).toEqual({
+      tier: '', quantization: 'fp8',
+    })
+  })
+
+  it('extracts quantization (int)', () => {
+    expect(extractModelAttributes('-INT4')).toEqual({
+      tier: '', quantization: 'int4',
+    })
+  })
+
+  it('extracts multiple attributes', () => {
+    expect(extractModelAttributes('-235B-A22B-fp8')).toEqual({
+      tier: '', paramSize: '235b', quantization: 'fp8',
+    })
+  })
+
+  it('strips MoE active params (A22B) without storing', () => {
+    const attrs = extractModelAttributes('-235B-A22B-fp8')
+    expect(attrs.paramSize).toBe('235b')
+    expect(attrs).not.toHaveProperty('moeActiveParams')
+  })
+
+  it('handles mixed case', () => {
+    expect(extractModelAttributes('-72b-instruct')).toEqual({
+      tier: 'instruct', paramSize: '72b',
+    })
   })
 })
 
@@ -72,6 +121,30 @@ describe('parseModelVersion', () => {
 
   it('returns null for deepseek-chat (no version)', () => {
     expect(parseModelVersion('deepseek-chat')).toBeNull()
+  })
+
+  it('extracts paramSize from qwen2.5-72b-instruct', () => {
+    const result = parseModelVersion('qwen2.5-72b-instruct')
+    expect(result?.paramSize).toBe('72b')
+    expect(result?.tier).toBe('instruct')
+  })
+
+  it('extracts paramSize and contextSize from llama-3-70b-instruct-32k', () => {
+    const result = parseModelVersion('llama-3-70b-instruct-32k')
+    expect(result?.paramSize).toBe('70b')
+    expect(result?.contextSize).toBe('32k')
+    expect(result?.tier).toBe('instruct')
+  })
+
+  it('extracts quantization from model-fp8 suffix', () => {
+    const result = parseModelVersion('model-1-fp8')
+    expect(result?.quantization).toBe('fp8')
+  })
+
+  it('extracts paramSize and quantization from model-235b-a22b-fp8', () => {
+    const result = parseModelVersion('model-1-235b-a22b-fp8')
+    expect(result?.paramSize).toBe('235b')
+    expect(result?.quantization).toBe('fp8')
   })
 })
 

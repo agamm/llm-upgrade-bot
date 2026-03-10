@@ -407,6 +407,40 @@ describe('suggestMajorUpgrades', () => {
     const newIds = ['moonshotai/kimi-k2-0905']
     expect(suggestMajorUpgrades(newIds, map)).toEqual([])
   })
+
+  it('does not propose cross-paramSize upgrade (32b for 72b)', () => {
+    const map: UpgradeMap = {
+      'qwen2.5-72b-instruct': { safe: null, major: null },
+    }
+    const newIds = ['qwen3-32b-instruct']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
+  it('does not propose cross-quantization upgrade (fp8 for fp16)', () => {
+    const map: UpgradeMap = {
+      'model-1-fp16': { safe: null, major: null },
+    }
+    const newIds = ['model-2-fp8']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
+  it('proposes upgrade when paramSize matches', () => {
+    const map: UpgradeMap = {
+      'qwen2.5-72b-instruct': { safe: null, major: null },
+    }
+    const newIds = ['qwen3-72b-instruct']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('qwen3-72b-instruct')
+  })
+
+  it('does not propose model without paramSize for model with paramSize', () => {
+    const map: UpgradeMap = {
+      'qwen2.5-72b-instruct': { safe: null, major: null },
+    }
+    const newIds = ['qwen3-instruct']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
 })
 
 describe('generateReport', () => {
