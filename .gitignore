@@ -4,3 +4,4 @@ coverage/
 *.tsbuildinfo
 .DS_Store
 .env
+data/discovery-report.md
