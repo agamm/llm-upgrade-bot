@@ -14,10 +14,15 @@ const TIER_TOKENS = new Set([
   'large', 'medium', 'small', 'nemo',
 ])
 
+/** Suffix words that don't affect capability tier (release stages, naming conventions). */
+const NOISE_TOKENS = new Set(['preview', 'latest', 'exp', 'experimental', 'beta', 'o'])
+
+/** Extract tier identity from suffix. Known TIER_TOKENS and unknown capability words
+ *  are included; NOISE_TOKENS (release stages) and numeric components are excluded. */
 export function tierOf(suffix: string): string {
   return suffix
     .split('-')
-    .filter((t) => TIER_TOKENS.has(t))
+    .filter((t) => t !== '' && !NOISE_TOKENS.has(t) && !/^\d+$/.test(t))
     .sort()
     .join('-')
 }

@@ -511,33 +511,9 @@ function applyEditsToContent(content, edits) {
 }
 
 // src/core/model-version.ts
-var TIER_TOKENS = /* @__PURE__ */ new Set([
-  "mini",
-  "nano",
-  "micro",
-  "flash",
-  "lite",
-  "turbo",
-  "fast",
-  "pro",
-  "plus",
-  "ultra",
-  "max",
-  "sonnet",
-  "haiku",
-  "opus",
-  "instruct",
-  "chat",
-  "coder",
-  "codex",
-  "customtools",
-  "large",
-  "medium",
-  "small",
-  "nemo"
-]);
+var NOISE_TOKENS = /* @__PURE__ */ new Set(["preview", "latest", "exp", "experimental", "beta", "o"]);
 function tierOf(suffix) {
-  return suffix.split("-").filter((t) => TIER_TOKENS.has(t)).sort().join("-");
+  return suffix.split("-").filter((t) => t !== "" && !NOISE_TOKENS.has(t) && !/^\d+$/.test(t)).sort().join("-");
 }
 var VERSION_PATTERN = /^(.+?)[-_]?v?(\d+(?:\.\d+)*)(.*)$/;
 function parseModelVersion(id) {
@@ -687,7 +663,7 @@ function validateUpgradeMap(map, rules = [OPENROUTER_RULE]) {
 }
 
 // src/core/model-discovery.ts
-var NON_CHAT_PATTERN = /embed|rerank|tts|whisper|dall-e|image|moderat|guard|diffusion|flux|veo|imagen|safety|jamba-1\.5/i;
+var NON_CHAT_PATTERN = /embed|rerank|tts|whisper|dall-e|image|moderat|guard|diffusion|flux|veo|imagen|safety|jamba-1\.5|transcribe/i;
 var PROVIDER_CONFIGS = [
   {
     name: "OpenRouter",
@@ -852,8 +828,23 @@ function detectSafeUpgrades(newIds, map, sourceMap) {
   }
   return proposed;
 }
+function buildHighestIndex(map) {
+  const norm = normalizeVersionSeparators;
+  const index = /* @__PURE__ */ new Map();
+  for (const mapKey of Object.keys(map)) {
+    const parsed = parseModelVersion(norm(mapKey));
+    if (!parsed) continue;
+    const k = `${parsed.line}|${parsed.tier}`;
+    const existing = index.get(k);
+    if (!existing || isHigherVersion(parsed.version, existing.version)) {
+      index.set(k, { version: parsed.version, key: mapKey });
+    }
+  }
+  return index;
+}
 function suggestMajorUpgrades(newIds, map, sourceMap) {
   const bestByKey = /* @__PURE__ */ new Map();
+  const highestIndex = buildHighestIndex(map);
   const norm = normalizeVersionSeparators;
   for (const newId of newIds) {
     if (newId.includes(":")) continue;
@@ -889,6 +880,16 @@ function suggestMajorUpgrades(newIds, map, sourceMap) {
       if (!existing || isHigherVersion(parsed.version, existing.version)) {
         bestByKey.set(existingKey, { proposal, version: parsed.version });
       }
+    }
+  }
+  for (const [, best] of bestByKey) {
+    if (map[best.proposal.key]?.major !== null) continue;
+    const parsed = parseModelVersion(norm(best.proposal.entry.major ?? ""));
+    if (!parsed) continue;
+    const highest = highestIndex.get(`${parsed.line}|${parsed.tier}`);
+    if (highest && isHigherVersion(highest.version, best.version)) {
+      best.proposal.entry.major = matchSeparatorStyle(highest.key, best.proposal.key);
+      best.version = highest.version;
     }
   }
   return [...bestByKey.values()].map((v) => v.proposal);

@@ -10,7 +10,7 @@ export interface ProposedEntry {
 }
 
 const NON_CHAT_PATTERN =
-  /embed|rerank|tts|whisper|dall-e|image|moderat|guard|diffusion|flux|veo|imagen|safety|jamba-1\.5/i
+  /embed|rerank|tts|whisper|dall-e|image|moderat|guard|diffusion|flux|veo|imagen|safety|jamba-1\.5|transcribe/i
 
 export const PROVIDER_CONFIGS: ProviderConfig[] = [
   {
@@ -215,12 +215,31 @@ export function detectSafeUpgrades(
 }
 
 
+interface HighestModel { version: number[]; key: string }
+
+/** O(map_size) index: highest version per line+tier across all map keys. */
+function buildHighestIndex(map: UpgradeMap): Map<string, HighestModel> {
+  const norm = normalizeVersionSeparators
+  const index = new Map<string, HighestModel>()
+  for (const mapKey of Object.keys(map)) {
+    const parsed = parseModelVersion(norm(mapKey))
+    if (!parsed) continue
+    const k = `${parsed.line}|${parsed.tier}`
+    const existing = index.get(k)
+    if (!existing || isHigherVersion(parsed.version, existing.version)) {
+      index.set(k, { version: parsed.version, key: mapKey })
+    }
+  }
+  return index
+}
+
 export function suggestMajorUpgrades(
   newIds: string[],
   map: UpgradeMap,
   sourceMap?: Map<string, string[]>,
 ): ProposedEntry[] {
   const bestByKey = new Map<string, { proposal: ProposedEntry; version: number[] }>()
+  const highestIndex = buildHighestIndex(map)
 
   const norm = normalizeVersionSeparators
   for (const newId of newIds) {
@@ -268,6 +287,18 @@ export function suggestMajorUpgrades(
       if (!existing || isHigherVersion(parsed.version, existing.version)) {
         bestByKey.set(existingKey, { proposal, version: parsed.version })
       }
+    }
+  }
+
+  // For keys that had no major, check if map already has a higher model (O(1) lookup)
+  for (const [, best] of bestByKey) {
+    if (map[best.proposal.key]?.major !== null) continue
+    const parsed = parseModelVersion(norm(best.proposal.entry.major ?? ''))
+    if (!parsed) continue
+    const highest = highestIndex.get(`${parsed.line}|${parsed.tier}`)
+    if (highest && isHigherVersion(highest.version, best.version)) {
+      best.proposal.entry.major = matchSeparatorStyle(highest.key, best.proposal.key)
+      best.version = highest.version
     }
   }
 

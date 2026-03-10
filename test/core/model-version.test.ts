@@ -17,6 +17,11 @@ describe('tierOf', () => {
     ['-flash-20251001', 'flash'],
     ['-turbo-instruct', 'instruct-turbo'],
     ['-codex-mini', 'codex-mini'],
+    // Unknown capability words are preserved (not silently dropped)
+    ['o-transcribe', 'transcribe'],
+    ['-search-preview', 'search'],
+    ['-9b-it', '9b-it'],
+    ['o-realtime-preview', 'realtime'],
   ])('tierOf(%j) → %j', (suffix, expected) => {
     expect(tierOf(suffix)).toBe(expected)
   })

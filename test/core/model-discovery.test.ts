@@ -24,6 +24,7 @@ describe('filterChatModels', () => {
       'llama-guard-3',
       'stable-diffusion-xl',
       'flux-pro',
+      'gpt-4o-transcribe',
     ]
     expect(filterChatModels(ids)).toEqual(['gpt-4o'])
   })
@@ -351,6 +352,35 @@ describe('suggestMajorUpgrades', () => {
     const proposed = suggestMajorUpgrades(newIds, map)
     expect(proposed).toHaveLength(1)
     expect(proposed[0]?.entry.major).toBe('gemini-3.1-flash-preview')
+  })
+
+  it('does not match specialized suffix against flagship (transcribe vs empty)', () => {
+    const map: UpgradeMap = {
+      'gpt-4o-transcribe': { safe: null, major: null },
+    }
+    const newIds = ['gpt-5.1']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
+  it('does not match search-preview against flagship', () => {
+    const map: UpgradeMap = {
+      'gpt-4o-search-preview': { safe: null, major: null },
+    }
+    const newIds = ['gpt-5.4']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
+  it('upgrades to highest already-known model when key has no major', () => {
+    const map: UpgradeMap = {
+      'gpt-4.1': { safe: null, major: null },
+      'gpt-5.4': { safe: null, major: null },
+    }
+    // gpt-5.1 is newly discovered, but gpt-5.4 already exists in map
+    const newIds = ['gpt-5.1']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.key).toBe('gpt-4.1')
+    expect(proposed[0]?.entry.major).toBe('gpt-5.4')
   })
 
   it('skips colon-tagged models (provider variant tags)', () => {
