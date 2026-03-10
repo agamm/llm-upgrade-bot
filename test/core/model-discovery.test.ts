@@ -319,6 +319,23 @@ describe('suggestMajorUpgrades', () => {
     expect(proposed.find((p) => p.key === 'gemini-3')?.entry.major).toBe('gemini-5')
     expect(proposed.find((p) => p.key === 'gemini-4')?.entry.major).toBe('gemini-5')
   })
+
+  it('skips colon-tagged models (provider variant tags)', () => {
+    const map: UpgradeMap = {
+      'moonshotai/kimi-k2': { safe: null, major: 'moonshotai/kimi-k2.5' },
+    }
+    const newIds = ['moonshotai/kimi-k2-0905:exacto']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
+  it('does not treat date codes as version components', () => {
+    const map: UpgradeMap = {
+      'moonshotai/kimi-k2': { safe: null, major: 'moonshotai/kimi-k2.5' },
+    }
+    // Even without colon tag, 0905 is a date code, not version 905
+    const newIds = ['moonshotai/kimi-k2-0905']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
 })
 
 describe('generateReport', () => {

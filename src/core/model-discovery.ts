@@ -187,6 +187,7 @@ export function detectSafeUpgrades(
   const proposed: ProposedEntry[] = []
 
   for (const newId of newIds) {
+    if (newId.includes(':')) continue
     const parsed = parseModelFamily(newId)
     if (!parsed) continue
 
@@ -223,6 +224,8 @@ export function suggestMajorUpgrades(
 
   const norm = normalizeVersionSeparators
   for (const newId of newIds) {
+    // Colon-tagged models are provider variant tags (e.g., :free, :exacto), not upgrade targets
+    if (newId.includes(':')) continue
     // Date-stamped models are handled by detectSafeUpgrades, not here
     if (DATE_PATTERN.test(newId)) continue
     const parsed = parseModelVersion(norm(newId))

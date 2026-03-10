@@ -33,9 +33,15 @@ export function parseModelVersion(id: string): ModelVersion | null {
   return { line, version, suffix, tier: tierOf(suffix) }
 }
 
-/** Normalize digit-hyphen-digit to digit-dot-digit so 4-6 and 4.6 compare equal */
+/** Version components are 1–2 digits. 3+ digit components are date/build codes (e.g., 0905). */
+function isVersionSequence(seq: string, sep: string): boolean {
+  return seq.split(sep).every((p) => p.length <= 2)
+}
+
+/** Normalize digit-hyphen-digit to digit-dot-digit so 4-6 and 4.6 compare equal.
+ *  Only normalizes sequences where every component is 1–2 digits. */
 export function normalizeVersionSeparators(id: string): string {
-  return id.replace(/\d+(?:-\d+)+/g, (m) => m.replaceAll('-', '.'))
+  return id.replace(/\d+(?:-\d+)+/g, (m) => (isVersionSequence(m, '-') ? m.replaceAll('-', '.') : m))
 }
 
 /** Convert newId digit separators to match the convention used in referenceId */
@@ -44,10 +50,10 @@ export function matchSeparatorStyle(newId: string, referenceId: string): string 
   const refUsesDot = /\d\.\d/.test(referenceId)
 
   if (refUsesHyphen && !refUsesDot) {
-    return newId.replace(/\d+(?:\.\d+)+/g, (m) => m.replaceAll('.', '-'))
+    return newId.replace(/\d+(?:\.\d+)+/g, (m) => (isVersionSequence(m, '.') ? m.replaceAll('.', '-') : m))
   }
   if (refUsesDot && !refUsesHyphen) {
-    return newId.replace(/\d+(?:-\d+)+/g, (m) => m.replaceAll('-', '.'))
+    return newId.replace(/\d+(?:-\d+)+/g, (m) => (isVersionSequence(m, '-') ? m.replaceAll('-', '.') : m))
   }
   return newId
 }

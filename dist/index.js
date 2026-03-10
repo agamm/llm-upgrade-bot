@@ -544,17 +544,20 @@ function parseModelVersion(id) {
   if (version.some(isNaN)) return null;
   return { line, version, suffix, tier: tierOf(suffix) };
 }
+function isVersionSequence(seq, sep) {
+  return seq.split(sep).every((p) => p.length <= 2);
+}
 function normalizeVersionSeparators(id) {
-  return id.replace(/\d+(?:-\d+)+/g, (m) => m.replaceAll("-", "."));
+  return id.replace(/\d+(?:-\d+)+/g, (m) => isVersionSequence(m, "-") ? m.replaceAll("-", ".") : m);
 }
 function matchSeparatorStyle(newId, referenceId) {
   const refUsesHyphen = /\d-\d/.test(referenceId);
   const refUsesDot = /\d\.\d/.test(referenceId);
   if (refUsesHyphen && !refUsesDot) {
-    return newId.replace(/\d+(?:\.\d+)+/g, (m) => m.replaceAll(".", "-"));
+    return newId.replace(/\d+(?:\.\d+)+/g, (m) => isVersionSequence(m, ".") ? m.replaceAll(".", "-") : m);
   }
   if (refUsesDot && !refUsesHyphen) {
-    return newId.replace(/\d+(?:-\d+)+/g, (m) => m.replaceAll("-", "."));
+    return newId.replace(/\d+(?:-\d+)+/g, (m) => isVersionSequence(m, "-") ? m.replaceAll("-", ".") : m);
   }
   return newId;
 }
@@ -714,6 +717,7 @@ function parseModelFamily(id) {
 function detectSafeUpgrades(newIds, map, sourceMap) {
   const proposed = [];
   for (const newId of newIds) {
+    if (newId.includes(":")) continue;
     const parsed = parseModelFamily(newId);
     if (!parsed) continue;
     for (const [existingKey, existingEntry] of Object.entries(map)) {
@@ -738,6 +742,7 @@ function suggestMajorUpgrades(newIds, map, sourceMap) {
   const proposed = [];
   const norm = normalizeVersionSeparators;
   for (const newId of newIds) {
+    if (newId.includes(":")) continue;
     if (DATE_PATTERN.test(newId)) continue;
     const parsed = parseModelVersion(norm(newId));
     if (!parsed) continue;

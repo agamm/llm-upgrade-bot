@@ -100,6 +100,10 @@ describe('normalizeVersionSeparators', () => {
     ['gpt-4o-mini', 'gpt-4o-mini'],
     ['gemini-2.0-flash', 'gemini-2.0-flash'],
     ['o3-mini', 'o3-mini'],
+    // Date codes (>= 100) are NOT normalized
+    ['kimi-k2-0905', 'kimi-k2-0905'],
+    ['moonshotai/kimi-k2-0905', 'moonshotai/kimi-k2-0905'],
+    ['model-3-0711', 'model-3-0711'],
   ])('normalizeVersionSeparators(%j) → %j', (input, expected) => {
     expect(normalizeVersionSeparators(input)).toBe(expected)
   })
@@ -125,6 +129,9 @@ describe('matchSeparatorStyle', () => {
     ['claude-sonnet-5.1.2', 'claude-sonnet-4-0-1', 'claude-sonnet-5-1-2'],
     // No version digits at all → leave as-is
     ['deepseek-chat', 'deepseek-r1', 'deepseek-chat'],
+    // Date codes (3+ digit components) are NOT converted
+    ['kimi-k2-0905', 'model-4.1', 'kimi-k2-0905'],
+    ['model-2.0905', 'ref-4-0', 'model-2.0905'],
   ])('matchSeparatorStyle(%j, %j) → %j', (newId, ref, expected) => {
     expect(matchSeparatorStyle(newId, ref)).toBe(expected)
   })

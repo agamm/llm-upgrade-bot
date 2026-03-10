@@ -29,7 +29,7 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 ## Guardrails
 - **Max file:** 200 lines — refactor before exceeding
 - **Max function:** 30 lines — decompose if longer
-- **Tests required for:** all core/ functions, CLI integration tests
+- **Tests required for:** all core/ functions, CLI integration tests. When fixing production bugs, always add a regression test for the specific edge case before fixing.
 - **Before adding deps:** check Node.js stdlib first. Justify every new package.
 - **Forbidden:** `any` types, inline secrets, `console.log` for user output (use reporter), circular imports between layers
 - **Pause for review before:** new files, new npm deps, architecture changes
@@ -64,9 +64,11 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - **Breaking changes** (action input/output removals, behavior changes): bump major tag (`v2`)
 - `dist/` is in `.gitignore` but force-tracked — the composite action runs `node $ACTION_PATH/dist/cli.js`
 - `action.yml` has `branding` for Marketplace (icon: refresh-cw, color: blue)
-- Current version: **v1.5.0**
+- Current version: **v1.5.9**
 
 ## Gotchas
+- Version components in model IDs are 1–2 digits. 3+ digit components (e.g., `0905`, `0711`) are date/build codes — `normalizeVersionSeparators` and `matchSeparatorStyle` skip them
+- Colon-tagged models (`:free`, `:exacto`, `:nitro`) are OpenRouter variant tags, not real models — discovery skips them as upgrade targets
 - picocolors uses nesting `pc.bold(pc.red(...))` not chaining
 - Commander: use `new Command()` (not global), `parseAsync()` for async, `.exitOverride()` for tests
 - pnpm v10+ blocks postinstall scripts by default — use `pnpm.onlyBuiltDependencies`
