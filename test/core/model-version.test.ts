@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { tierOf, parseModelVersion, isHigherVersion, normalizeVersionSeparators } from '../../src/core/model-version.js'
+import { tierOf, parseModelVersion, isHigherVersion, normalizeVersionSeparators, matchSeparatorStyle } from '../../src/core/model-version.js'
 
 describe('tierOf', () => {
   it.each([
@@ -102,5 +102,30 @@ describe('normalizeVersionSeparators', () => {
     ['o3-mini', 'o3-mini'],
   ])('normalizeVersionSeparators(%j) → %j', (input, expected) => {
     expect(normalizeVersionSeparators(input)).toBe(expected)
+  })
+})
+
+describe('matchSeparatorStyle', () => {
+  it.each([
+    // Reference uses hyphens → convert dots to hyphens
+    ['claude-sonnet-5.0', 'claude-sonnet-4-0', 'claude-sonnet-5-0'],
+    ['claude-sonnet-5.6', 'claude-sonnet-4-6', 'claude-sonnet-5-6'],
+    ['anthropic/claude-sonnet-5.0', 'anthropic/claude-sonnet-4-0', 'anthropic/claude-sonnet-5-0'],
+    // Reference uses dots → convert hyphens to dots
+    ['gpt-5-0', 'gpt-4.1', 'gpt-5.0'],
+    // Reference has no digit separators → leave as-is
+    ['gpt-5.0', 'gpt-4o', 'gpt-5.0'],
+    ['gpt-5-0', 'gpt-4o', 'gpt-5-0'],
+    // No conversion needed (already matches)
+    ['claude-sonnet-5-0', 'claude-sonnet-4-0', 'claude-sonnet-5-0'],
+    ['gpt-5.0', 'gpt-4.1', 'gpt-5.0'],
+    // Gemini-style: dots in reference, no hyphens between digits
+    ['gemini-3.0-flash', 'gemini-2.0-flash', 'gemini-3.0-flash'],
+    // Multi-component versions
+    ['claude-sonnet-5.1.2', 'claude-sonnet-4-0-1', 'claude-sonnet-5-1-2'],
+    // No version digits at all → leave as-is
+    ['deepseek-chat', 'deepseek-r1', 'deepseek-chat'],
+  ])('matchSeparatorStyle(%j, %j) → %j', (newId, ref, expected) => {
+    expect(matchSeparatorStyle(newId, ref)).toBe(expected)
   })
 })

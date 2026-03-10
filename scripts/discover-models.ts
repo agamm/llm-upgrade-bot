@@ -115,9 +115,27 @@ async function main() {
     `Proposed: ${String(safeProposed.length)} safe, ${String(majorProposed.length)} major (${String(allProposed.length)} after dedup)`,
   )
 
+  // Ensure old replaced major targets get entries pointing to new target
+  const newEntries = new Map<string, { safe: string | null; major: string | null }>()
+  for (const p of allProposed) {
+    const existing = map[p.key]
+    if (existing?.major && p.entry.major && existing.major !== p.entry.major) {
+      if (!map[existing.major] && !pinnedKeys.has(existing.major)) {
+        newEntries.set(existing.major, { safe: null, major: p.entry.major })
+      }
+    }
+  }
+
   // Apply proposed entries to map
   for (const p of allProposed) {
     map[p.key] = p.entry
+  }
+  for (const [key, entry] of newEntries) {
+    map[key] = entry
+  }
+
+  if (newEntries.size > 0) {
+    console.log(`Added ${String(newEntries.size)} transitive entry(ies) for replaced major targets`)
   }
 
   // Write updated map — preserve compact one-line-per-entry format
@@ -141,6 +159,29 @@ async function main() {
       }
     }
     result.push(line)
+  }
+
+  // Insert new transitive entries before closing `}`
+  if (newEntries.size > 0) {
+    const closingIdx = result.lastIndexOf('}')
+    if (closingIdx > 0) {
+      // Ensure previous line has a trailing comma
+      const prevIdx = closingIdx - 1
+      const prevLine = result[prevIdx]
+      if (prevLine && !prevLine.trimEnd().endsWith(',') && !prevLine.trimEnd().endsWith('{')) {
+        result[prevIdx] = prevLine.trimEnd() + ','
+      }
+      const insertLines: string[] = []
+      const entries = [...newEntries.entries()]
+      for (let i = 0; i < entries.length; i++) {
+        const [key, entry] = entries[i]!
+        const safe = entry.safe === null ? 'null' : `"${entry.safe}"`
+        const major = entry.major === null ? 'null' : `"${entry.major}"`
+        const comma = i < entries.length - 1 ? ',' : ''
+        insertLines.push(`  "${key}": { "safe": ${safe}, "major": ${major} }${comma}`)
+      }
+      result.splice(closingIdx, 0, ...insertLines)
+    }
   }
 
   await writeFile(UPGRADES_PATH, result.join('\n'), 'utf-8')

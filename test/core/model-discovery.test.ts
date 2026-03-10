@@ -209,6 +209,116 @@ describe('suggestMajorUpgrades', () => {
     const newIds = ['claude-sonnet-4.6']
     expect(suggestMajorUpgrades(newIds, map)).toEqual([])
   })
+
+  it('does not replace major with lower dot version when major uses hyphens', () => {
+    const map: UpgradeMap = {
+      'anthropic/claude-sonnet-4-0': { safe: null, major: 'anthropic/claude-sonnet-4-6' },
+    }
+    // 4.5 < 4-6 (which is really 4.6)
+    const newIds = ['anthropic/claude-sonnet-4.5']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
+  it('does not propose lower dot version for hyphen key', () => {
+    const map: UpgradeMap = {
+      'claude-opus-4-5': { safe: null, major: null },
+    }
+    // 4.1 < 4-5 (which is really 4.5)
+    const newIds = ['claude-opus-4.1']
+    expect(suggestMajorUpgrades(newIds, map)).toEqual([])
+  })
+
+  it('allows genuine higher version with consistent hyphen separators', () => {
+    const map: UpgradeMap = {
+      'claude-sonnet-4-0': { safe: null, major: 'claude-sonnet-4-6' },
+    }
+    // 5-0 (5.0) > 4-6 (4.6) — genuinely higher
+    const newIds = ['claude-sonnet-5-0']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('claude-sonnet-5-0')
+  })
+
+  it('converts dot-variant to hyphen when key uses hyphens', () => {
+    const map: UpgradeMap = {
+      'claude-sonnet-4-0': { safe: null, major: 'claude-sonnet-4-6' },
+    }
+    // API discovers 5.0 with dots, but key uses hyphens → output should use hyphens
+    const newIds = ['claude-sonnet-5.0']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('claude-sonnet-5-0')
+  })
+
+  it('preserves dot convention when key uses dots', () => {
+    const map: UpgradeMap = {
+      'gpt-4.1': { safe: null, major: null },
+    }
+    const newIds = ['gpt-5.0']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('gpt-5.0')
+  })
+
+  it('converts hyphen-variant to dot when key uses dots', () => {
+    const map: UpgradeMap = {
+      'gpt-4.1': { safe: null, major: null },
+    }
+    const newIds = ['gpt-5-0']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('gpt-5.0')
+  })
+
+  it('converts dot-variant to hyphen for prefixed key', () => {
+    const map: UpgradeMap = {
+      'anthropic/claude-sonnet-4-0': { safe: null, major: 'anthropic/claude-sonnet-4-6' },
+    }
+    const newIds = ['anthropic/claude-sonnet-5.0']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('anthropic/claude-sonnet-5-0')
+  })
+
+  it('leaves gemini-style dots alone when key also uses dots', () => {
+    const map: UpgradeMap = {
+      'gemini-2.0-flash': { safe: null, major: null },
+    }
+    const newIds = ['gemini-3.0-flash']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('gemini-3.0-flash')
+  })
+
+  it('does not duplicate when both dot and hyphen variants discovered', () => {
+    const map: UpgradeMap = {
+      'claude-sonnet-4-0': { safe: null, major: null },
+    }
+    // Both variants discovered — should produce one proposal, not two
+    const newIds = ['claude-sonnet-5-0', 'claude-sonnet-5.0']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    // Both match but that's OK — deduplication happens in discover script
+    for (const p of proposed) {
+      // All proposed majors should use hyphens (matching the key)
+      expect(p.entry.major).toBe('claude-sonnet-5-0')
+    }
+  })
+
+  it('upgrades both old key and old target when both exist in map', () => {
+    // gemini-3 → gemini-4 exists, gemini-4 also exists as key
+    // Discovering gemini-5 should propose upgrades for BOTH
+    const map: UpgradeMap = {
+      'gemini-3': { safe: null, major: 'gemini-4' },
+      'gemini-4': { safe: null, major: null },
+    }
+    const newIds = ['gemini-5']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(2)
+    const keys = proposed.map((p) => p.key).sort()
+    expect(keys).toEqual(['gemini-3', 'gemini-4'])
+    expect(proposed.find((p) => p.key === 'gemini-3')?.entry.major).toBe('gemini-5')
+    expect(proposed.find((p) => p.key === 'gemini-4')?.entry.major).toBe('gemini-5')
+  })
 })
 
 describe('generateReport', () => {

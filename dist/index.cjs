@@ -591,7 +591,18 @@ function parseModelVersion(id) {
   return { line, version, suffix, tier: tierOf(suffix) };
 }
 function normalizeVersionSeparators(id) {
-  return id.replace(/(\d)-(\d)/g, "$1.$2");
+  return id.replace(/\d+(?:-\d+)+/g, (m) => m.replaceAll("-", "."));
+}
+function matchSeparatorStyle(newId, referenceId) {
+  const refUsesHyphen = /\d-\d/.test(referenceId);
+  const refUsesDot = /\d\.\d/.test(referenceId);
+  if (refUsesHyphen && !refUsesDot) {
+    return newId.replace(/\d+(?:\.\d+)+/g, (m) => m.replaceAll(".", "-"));
+  }
+  if (refUsesDot && !refUsesHyphen) {
+    return newId.replace(/\d+(?:-\d+)+/g, (m) => m.replaceAll("-", "."));
+  }
+  return newId;
 }
 function isHigherVersion(a, b) {
   const len = Math.max(a.length, b.length);
@@ -771,31 +782,32 @@ function detectSafeUpgrades(newIds, map, sourceMap) {
 }
 function suggestMajorUpgrades(newIds, map, sourceMap) {
   const proposed = [];
+  const norm = normalizeVersionSeparators;
   for (const newId of newIds) {
     if (DATE_PATTERN.test(newId)) continue;
-    const parsed = parseModelVersion(newId);
+    const parsed = parseModelVersion(norm(newId));
     if (!parsed) continue;
     for (const [existingKey, existingEntry] of Object.entries(map)) {
       if (existingEntry.major !== null) {
-        const currentMajorParsed = parseModelVersion(existingEntry.major);
+        const currentMajorParsed = parseModelVersion(norm(existingEntry.major));
         if (!currentMajorParsed) continue;
         if (currentMajorParsed.line !== parsed.line) continue;
         if (!isHigherVersion(parsed.version, currentMajorParsed.version)) continue;
         if (currentMajorParsed.tier !== parsed.tier) continue;
       }
-      const existingParsed = parseModelVersion(existingKey);
+      const existingParsed = parseModelVersion(norm(existingKey));
       if (!existingParsed) continue;
       if (existingParsed.line !== parsed.line) continue;
       if (existingParsed.tier !== parsed.tier) continue;
       if (!isHigherVersion(parsed.version, existingParsed.version)) continue;
       if (existingParsed.version.length === 1 && (existingParsed.version[0] ?? 0) > 1e3) continue;
       if (existingEntry.safe === newId) continue;
-      const norm = normalizeVersionSeparators;
       if (norm(newId) === norm(existingKey)) continue;
       if (existingEntry.major !== null && norm(newId) === norm(existingEntry.major)) continue;
+      const majorId = matchSeparatorStyle(newId, existingKey);
       proposed.push({
         key: existingKey,
-        entry: { safe: existingEntry.safe, major: newId },
+        entry: { safe: existingEntry.safe, major: majorId },
         confidence: "suggested",
         reason: `Same line "${parsed.line}", higher version ${parsed.version.join(".")} > ${existingParsed.version.join(".")}`,
         sources: sourceMap?.get(newId) ?? []

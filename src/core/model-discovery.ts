@@ -1,5 +1,5 @@
 import type { UpgradeEntry, UpgradeMap, ProviderConfig, Result } from './types.js'
-import { parseModelVersion, isHigherVersion, normalizeVersionSeparators } from './model-version.js'
+import { parseModelVersion, isHigherVersion, normalizeVersionSeparators, matchSeparatorStyle } from './model-version.js'
 
 export interface ProposedEntry {
   key: string
@@ -221,22 +221,23 @@ export function suggestMajorUpgrades(
 ): ProposedEntry[] {
   const proposed: ProposedEntry[] = []
 
+  const norm = normalizeVersionSeparators
   for (const newId of newIds) {
     // Date-stamped models are handled by detectSafeUpgrades, not here
     if (DATE_PATTERN.test(newId)) continue
-    const parsed = parseModelVersion(newId)
+    const parsed = parseModelVersion(norm(newId))
     if (!parsed) continue
 
     for (const [existingKey, existingEntry] of Object.entries(map)) {
       if (existingEntry.major !== null) {
-        const currentMajorParsed = parseModelVersion(existingEntry.major)
+        const currentMajorParsed = parseModelVersion(norm(existingEntry.major))
         if (!currentMajorParsed) continue
         if (currentMajorParsed.line !== parsed.line) continue
         if (!isHigherVersion(parsed.version, currentMajorParsed.version)) continue
         if (currentMajorParsed.tier !== parsed.tier) continue
       }
 
-      const existingParsed = parseModelVersion(existingKey)
+      const existingParsed = parseModelVersion(norm(existingKey))
       if (!existingParsed) continue
       if (existingParsed.line !== parsed.line) continue
       if (existingParsed.tier !== parsed.tier) continue
@@ -246,13 +247,14 @@ export function suggestMajorUpgrades(
       // Skip if proposed target is already the safe upgrade
       if (existingEntry.safe === newId) continue
       // Skip if same model with different separator (e.g., 4-6 vs 4.6)
-      const norm = normalizeVersionSeparators
       if (norm(newId) === norm(existingKey)) continue
       if (existingEntry.major !== null && norm(newId) === norm(existingEntry.major)) continue
 
+      const majorId = matchSeparatorStyle(newId, existingKey)
+
       proposed.push({
         key: existingKey,
-        entry: { safe: existingEntry.safe, major: newId },
+        entry: { safe: existingEntry.safe, major: majorId },
         confidence: 'suggested',
         reason: `Same line "${parsed.line}", higher version ${parsed.version.join('.')} > ${existingParsed.version.join('.')}`,
         sources: sourceMap?.get(newId) ?? [],
