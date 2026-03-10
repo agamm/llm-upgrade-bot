@@ -20,6 +20,16 @@ const BARE_TOKEN_REGEX = /[a-zA-Z][a-zA-Z0-9\-._/]+[a-zA-Z0-9]/g
  * @param upgradeMap - The upgrade map to look up model IDs
  * @returns Array of ScanResult for each matched model string
  */
+/** Strip OpenRouter colon tag (:free, :exacto, :nitro) from model ID.
+ *  Returns null if no tag found or if tag is a numeric suffix like Bedrock ":0". */
+function stripColonTag(id: string): { base: string; tag: string } | null {
+  const colonIdx = id.lastIndexOf(':')
+  if (colonIdx <= 0) return null
+  const tag = id.slice(colonIdx)
+  if (/^:\d+$/.test(tag)) return null
+  return { base: id.slice(0, colonIdx), tag }
+}
+
 /**
  * Try to convert a regex match into a ScanResult by looking up the
  * matched model ID in the upgrade map.
@@ -33,7 +43,19 @@ function matchToResult(
   const modelId = match[1] ?? match[2]
   if (!modelId) return undefined
 
-  const entry = upgradeMap[modelId]
+  // Try exact match first (handles Bedrock ":0" suffixes)
+  let entry = upgradeMap[modelId]
+  let colonTag = ''
+
+  // If no exact match, try stripping colon tag (OpenRouter :free, :exacto, etc.)
+  if (!entry) {
+    const stripped = stripColonTag(modelId)
+    if (stripped) {
+      entry = upgradeMap[stripped.base]
+      if (entry) colonTag = stripped.tag
+    }
+  }
+
   if (!entry) return undefined
 
   const { line, column } = resolvePosition(lineOffsets, match.index)
@@ -42,8 +64,8 @@ function matchToResult(
     line,
     column,
     matchedText: modelId,
-    safeUpgrade: entry.safe,
-    majorUpgrade: entry.major,
+    safeUpgrade: entry.safe ? entry.safe + colonTag : null,
+    majorUpgrade: entry.major ? entry.major + colonTag : null,
   }
 }
 

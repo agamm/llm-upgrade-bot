@@ -23,7 +23,6 @@ export { computeEdits, applyFixes } from './fixer.js'
 export {
   validateUpgradeMap,
   checkVariantConsistency,
-  syncVariantConsistency,
   OPENROUTER_RULE,
 } from './variant-validator.js'
 
@@ -32,9 +31,10 @@ export {
   fetchAllProviderModels,
   filterChatModels,
   diffModels,
-  detectSafeUpgrades,
-  suggestMajorUpgrades,
-  generateReport,
   PROVIDER_CONFIGS,
 } from './model-discovery.js'
-export type { ProposedEntry } from './model-discovery.js'
+
+export { loadFamilies, allModelsInFamilies, findModelInFamilies } from './families.js'
+export type { FamilyChain, FamiliesMap } from './families.js'
+
+export { deriveUpgradeMap, PREFIX_RULES } from './derive-upgrades.js'

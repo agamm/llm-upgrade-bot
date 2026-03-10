@@ -21,25 +21,26 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var core_exports = {};
 __export(core_exports, {
   OPENROUTER_RULE: () => OPENROUTER_RULE,
+  PREFIX_RULES: () => PREFIX_RULES,
   PROVIDER_CONFIGS: () => PROVIDER_CONFIGS,
   SUPPORTED_EXTENSIONS: () => SUPPORTED_EXTENSIONS,
+  allModelsInFamilies: () => allModelsInFamilies,
   applyFixes: () => applyFixes,
   buildPrefixRegex: () => buildPrefixRegex,
   checkVariantConsistency: () => checkVariantConsistency,
   computeEdits: () => computeEdits,
-  detectSafeUpgrades: () => detectSafeUpgrades,
+  deriveUpgradeMap: () => deriveUpgradeMap,
   diffModels: () => diffModels,
   fetchAllProviderModels: () => fetchAllProviderModels,
   fetchProviderModels: () => fetchProviderModels,
   fileMatchesPrefixFilter: () => fileMatchesPrefixFilter,
   filterChatModels: () => filterChatModels,
-  generateReport: () => generateReport,
+  findModelInFamilies: () => findModelInFamilies,
+  loadFamilies: () => loadFamilies,
   loadUpgradeMap: () => loadUpgradeMap,
   lookupModel: () => lookupModel,
   scanDirectory: () => scanDirectory,
   scanFile: () => scanFile,
-  suggestMajorUpgrades: () => suggestMajorUpgrades,
-  syncVariantConsistency: () => syncVariantConsistency,
   validateUpgradeMap: () => validateUpgradeMap
 });
 module.exports = __toCommonJS(core_exports);
@@ -151,10 +152,25 @@ function fileMatchesPrefixFilter(content, prefixRegex) {
 var QUOTED_STRING_REGEX = /"([^"]+)"|'([^']+)'/g;
 var BACKTICK_REGEX = /`([^`]+)`/g;
 var BARE_TOKEN_REGEX = /[a-zA-Z][a-zA-Z0-9\-._/]+[a-zA-Z0-9]/g;
+function stripColonTag(id) {
+  const colonIdx = id.lastIndexOf(":");
+  if (colonIdx <= 0) return null;
+  const tag = id.slice(colonIdx);
+  if (/^:\d+$/.test(tag)) return null;
+  return { base: id.slice(0, colonIdx), tag };
+}
 function matchToResult(match, filePath, lineOffsets, upgradeMap) {
   const modelId = match[1] ?? match[2];
   if (!modelId) return void 0;
-  const entry = upgradeMap[modelId];
+  let entry = upgradeMap[modelId];
+  let colonTag = "";
+  if (!entry) {
+    const stripped = stripColonTag(modelId);
+    if (stripped) {
+      entry = upgradeMap[stripped.base];
+      if (entry) colonTag = stripped.tag;
+    }
+  }
   if (!entry) return void 0;
   const { line, column } = resolvePosition(lineOffsets, match.index);
   return {
@@ -162,8 +178,8 @@ function matchToResult(match, filePath, lineOffsets, upgradeMap) {
     line,
     column,
     matchedText: modelId,
-    safeUpgrade: entry.safe,
-    majorUpgrade: entry.major
+    safeUpgrade: entry.safe ? entry.safe + colonTag : null,
+    majorUpgrade: entry.major ? entry.major + colonTag : null
   };
 }
 function collectMatches(regex, content, filePath, lineOffsets, upgradeMap) {
@@ -510,79 +526,6 @@ function applyEditsToContent(content, edits) {
   return { result: lines.join("\n"), appliedCount };
 }
 
-// src/core/model-version.ts
-var NOISE_TOKENS = /* @__PURE__ */ new Set(["preview", "latest", "exp", "experimental", "beta", "o"]);
-var PARAM_SIZE_RE = /^\d+[Bb]$/;
-var MOE_ACTIVE_RE = /^[Aa]\d+[Bb]$/;
-var CONTEXT_SIZE_RE = /^\d+[Kk]$/;
-var FLOAT_QUANT_RE = /^[Ff][Pp]\d+$/;
-var INT_QUANT_RE = /^[Ii][Nn][Tt]\d+$/;
-var GGUF_QUANT_RE = /^[Qq]\d+.*$/;
-function extractModelAttributes(suffix) {
-  let paramSize;
-  let contextSize;
-  let quantization;
-  const tierTokens = [];
-  for (const t of suffix.split("-")) {
-    if (t === "") continue;
-    const lower = t.toLowerCase();
-    if (NOISE_TOKENS.has(lower) || /^\d+$/.test(t)) continue;
-    if (PARAM_SIZE_RE.test(t)) {
-      paramSize = lower;
-    } else if (MOE_ACTIVE_RE.test(t)) {
-    } else if (CONTEXT_SIZE_RE.test(t)) {
-      contextSize = lower;
-    } else if (FLOAT_QUANT_RE.test(t) || INT_QUANT_RE.test(t) || GGUF_QUANT_RE.test(t)) {
-      quantization = lower;
-    } else {
-      tierTokens.push(lower);
-    }
-  }
-  return {
-    tier: tierTokens.sort().join("-"),
-    ...paramSize !== void 0 && { paramSize },
-    ...contextSize !== void 0 && { contextSize },
-    ...quantization !== void 0 && { quantization }
-  };
-}
-var VERSION_PATTERN = /^(.+?)[-_]?v?(\d+(?:\.\d+)*)(.*)$/;
-function parseModelVersion(id) {
-  const match = VERSION_PATTERN.exec(id);
-  if (!match) return null;
-  const [, line = "", versionStr = "", suffix = ""] = match;
-  const version = versionStr.split(".").map(Number);
-  if (version.some(isNaN)) return null;
-  const attrs = extractModelAttributes(suffix);
-  return { line, version, suffix, ...attrs };
-}
-function isVersionSequence(seq, sep) {
-  return seq.split(sep).every((p) => p.length <= 2);
-}
-function normalizeVersionSeparators(id) {
-  return id.replace(/\d+(?:-(?!\d+[bBkK])\d+)+/g, (m) => isVersionSequence(m, "-") ? m.replaceAll("-", ".") : m);
-}
-function matchSeparatorStyle(newId, referenceId) {
-  const refUsesHyphen = /\d-\d/.test(referenceId);
-  const refUsesDot = /\d\.\d/.test(referenceId);
-  if (refUsesHyphen && !refUsesDot) {
-    return newId.replace(/\d+(?:\.(?!\d+[bBkK])\d+)+/g, (m) => isVersionSequence(m, ".") ? m.replaceAll(".", "-") : m);
-  }
-  if (refUsesDot && !refUsesHyphen) {
-    return newId.replace(/\d+(?:-(?!\d+[bBkK])\d+)+/g, (m) => isVersionSequence(m, "-") ? m.replaceAll("-", ".") : m);
-  }
-  return newId;
-}
-function isHigherVersion(a, b) {
-  const len = Math.max(a.length, b.length);
-  for (let i = 0; i < len; i++) {
-    const av = a[i] ?? 0;
-    const bv = b[i] ?? 0;
-    if (av > bv) return true;
-    if (av < bv) return false;
-  }
-  return false;
-}
-
 // src/core/variant-validator.ts
 function checkVariantConsistency(map, rules) {
   const errors = [];
@@ -618,75 +561,8 @@ var OPENROUTER_RULE = {
     return slash > 0 ? key.slice(slash + 1) : null;
   }
 };
-var SIZE_TIERS = /* @__PURE__ */ new Set(["mini", "nano", "micro"]);
-function stripPrefix(id) {
-  const slash = id.indexOf("/");
-  return slash > 0 ? id.slice(slash + 1) : id;
-}
-function checkCrossTierUpgrades(map) {
-  const errors = [];
-  const norm = normalizeVersionSeparators;
-  for (const [key, entry] of Object.entries(map)) {
-    const keyParsed = parseModelVersion(norm(stripPrefix(key)));
-    if (!keyParsed) continue;
-    for (const field of ["safe", "major"]) {
-      const target = entry[field];
-      if (!target) continue;
-      const targetParsed = parseModelVersion(norm(stripPrefix(target)));
-      if (!targetParsed) continue;
-      if (keyParsed.line !== targetParsed.line) continue;
-      const keyIsSize = SIZE_TIERS.has(keyParsed.tier);
-      const targetIsSize = SIZE_TIERS.has(targetParsed.tier);
-      if (keyIsSize && !targetIsSize && targetParsed.tier === "") {
-        errors.push(`"${key}".${field} \u2192 "${target}": size tier "${keyParsed.tier}" upgrades to flagship`);
-      }
-      if (!keyIsSize && keyParsed.tier === "" && targetIsSize) {
-        errors.push(`"${key}".${field} \u2192 "${target}": flagship downgrades to size tier "${targetParsed.tier}"`);
-      }
-    }
-  }
-  return errors;
-}
-function syncVariantConsistency(map, updatedKeys, rules = [OPENROUTER_RULE]) {
-  let synced = 0;
-  for (const key of updatedKeys) {
-    for (const rule of rules) {
-      if (rule.pattern.test(key)) {
-        const nativeKey = rule.extractNative(key);
-        if (!nativeKey || !map[nativeKey]) continue;
-        const prefix = key.slice(0, key.length - nativeKey.length);
-        const variantEntry = map[key];
-        const nativeEntry = map[nativeKey];
-        for (const field of ["safe", "major"]) {
-          if (variantEntry[field] !== null && nativeEntry[field] === null) {
-            nativeEntry[field] = variantEntry[field].replace(prefix, "");
-            synced++;
-          }
-        }
-      } else {
-        for (const [vKey, vEntry] of Object.entries(map)) {
-          if (!rule.pattern.test(vKey)) continue;
-          const nativeId = rule.extractNative(vKey);
-          if (nativeId !== key) continue;
-          const prefix = vKey.slice(0, vKey.length - key.length);
-          const nativeEntry = map[key];
-          for (const field of ["safe", "major"]) {
-            if (nativeEntry[field] !== null && vEntry[field] === null) {
-              vEntry[field] = `${prefix}${nativeEntry[field]}`;
-              synced++;
-            }
-          }
-        }
-      }
-    }
-  }
-  return synced;
-}
 function validateUpgradeMap(map, rules = [OPENROUTER_RULE]) {
-  const errors = [
-    ...checkVariantConsistency(map, rules),
-    ...checkCrossTierUpgrades(map)
-  ];
+  const errors = checkVariantConsistency(map, rules);
   if (errors.length > 0) {
     return { ok: false, error: errors };
   }
@@ -828,161 +704,170 @@ function filterChatModels(ids) {
 function diffModels(knownKeys, discovered) {
   return discovered.filter((id) => !knownKeys.has(id));
 }
-var DATE_PATTERN = /^(.+?)[-_](\d{4})[-_]?(\d{2})[-_]?(\d{2})(.*)$/;
-function parseModelFamily(id) {
-  const match = DATE_PATTERN.exec(id);
-  if (!match) return null;
-  const [, family = "", y = "", m = "", d = "", suffix = ""] = match;
-  return { family, date: `${y}${m}${d}`, suffix };
-}
-function detectSafeUpgrades(newIds, map, sourceMap) {
-  const proposed = [];
-  for (const newId of newIds) {
-    if (newId.includes(":")) continue;
-    const parsed = parseModelFamily(newId);
-    if (!parsed) continue;
-    for (const [existingKey, existingEntry] of Object.entries(map)) {
-      if (existingEntry.safe !== null) continue;
-      const existingParsed = parseModelFamily(existingKey);
-      if (!existingParsed) continue;
-      if (existingParsed.family !== parsed.family) continue;
-      if (existingParsed.suffix !== parsed.suffix) continue;
-      if (existingParsed.date >= parsed.date) continue;
-      proposed.push({
-        key: existingKey,
-        entry: { safe: newId, major: existingEntry.major },
-        confidence: "auto",
-        reason: `Same family "${parsed.family}", newer date ${parsed.date} > ${existingParsed.date}`,
-        sources: sourceMap?.get(newId) ?? []
-      });
-    }
+
+// src/core/families.ts
+var import_node_fs = require("fs");
+var import_node_path3 = require("path");
+var import_meta2 = {};
+function loadFamilies(customPath) {
+  const filePath = customPath ?? (0, import_node_path3.join)(import_meta2.dirname, "../../data/families.json");
+  try {
+    const raw = (0, import_node_fs.readFileSync)(filePath, "utf-8");
+    const parsed = JSON.parse(raw);
+    return { ok: true, data: parsed };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: `Failed to load families.json: ${message}` };
   }
-  return proposed;
 }
-function attrKey(p) {
-  return `${p.line}|${p.tier}|${p.paramSize ?? ""}|${p.contextSize ?? ""}|${p.quantization ?? ""}`;
-}
-function buildHighestIndex(map) {
-  const norm = normalizeVersionSeparators;
-  const index = /* @__PURE__ */ new Map();
-  for (const mapKey of Object.keys(map)) {
-    const parsed = parseModelVersion(norm(mapKey));
-    if (!parsed) continue;
-    const k = attrKey(parsed);
-    const existing = index.get(k);
-    if (!existing || isHigherVersion(parsed.version, existing.version)) {
-      index.set(k, { version: parsed.version, key: mapKey });
-    }
-  }
-  return index;
-}
-function suggestMajorUpgrades(newIds, map, sourceMap) {
-  const bestByKey = /* @__PURE__ */ new Map();
-  const highestIndex = buildHighestIndex(map);
-  const norm = normalizeVersionSeparators;
-  for (const newId of newIds) {
-    if (newId.includes(":")) continue;
-    if (DATE_PATTERN.test(newId)) continue;
-    const parsed = parseModelVersion(norm(newId));
-    if (!parsed) continue;
-    for (const [existingKey, existingEntry] of Object.entries(map)) {
-      if (DATE_PATTERN.test(existingKey)) continue;
-      if (existingEntry.major !== null) {
-        const currentMajorParsed = parseModelVersion(norm(existingEntry.major));
-        if (!currentMajorParsed) continue;
-        if (currentMajorParsed.line !== parsed.line) continue;
-        if (!isHigherVersion(parsed.version, currentMajorParsed.version)) continue;
-        if (currentMajorParsed.tier !== parsed.tier) continue;
-        if (currentMajorParsed.paramSize !== parsed.paramSize) continue;
-        if (currentMajorParsed.contextSize !== parsed.contextSize) continue;
-        if (currentMajorParsed.quantization !== parsed.quantization) continue;
-      }
-      const existingParsed = parseModelVersion(norm(existingKey));
-      if (!existingParsed) continue;
-      if (existingParsed.line !== parsed.line) continue;
-      if (existingParsed.tier !== parsed.tier) continue;
-      if (existingParsed.paramSize !== parsed.paramSize) continue;
-      if (existingParsed.contextSize !== parsed.contextSize) continue;
-      if (existingParsed.quantization !== parsed.quantization) continue;
-      if (!isHigherVersion(parsed.version, existingParsed.version)) continue;
-      if (existingParsed.version.length === 1 && (existingParsed.version[0] ?? 0) > 1e3) continue;
-      if (existingEntry.safe === newId) continue;
-      if (norm(newId) === norm(existingKey)) continue;
-      if (existingEntry.major !== null && norm(newId) === norm(existingEntry.major)) continue;
-      const majorId = matchSeparatorStyle(newId, existingKey);
-      const proposal = {
-        key: existingKey,
-        entry: { safe: existingEntry.safe, major: majorId },
-        confidence: "suggested",
-        reason: `Same line "${parsed.line}", higher version ${parsed.version.join(".")} > ${existingParsed.version.join(".")}`,
-        sources: sourceMap?.get(newId) ?? []
-      };
-      const existing = bestByKey.get(existingKey);
-      if (!existing || isHigherVersion(parsed.version, existing.version)) {
-        bestByKey.set(existingKey, { proposal, version: parsed.version });
+function allModelsInFamilies(families) {
+  const models = /* @__PURE__ */ new Set();
+  for (const chain of Object.values(families)) {
+    for (const generation of chain) {
+      for (const modelId of generation) {
+        models.add(modelId);
       }
     }
   }
-  for (const [, best] of bestByKey) {
-    if (map[best.proposal.key]?.major !== null) continue;
-    const parsed = parseModelVersion(norm(best.proposal.entry.major ?? ""));
-    if (!parsed) continue;
-    const highest = highestIndex.get(attrKey(parsed));
-    if (highest && isHigherVersion(highest.version, best.version)) {
-      best.proposal.entry.major = matchSeparatorStyle(highest.key, best.proposal.key);
-      best.version = highest.version;
-    }
-  }
-  return [...bestByKey.values()].map((v) => v.proposal);
+  return models;
 }
-function generateReport(proposed, skipped) {
-  const lines = ["## Model Discovery Report\n"];
-  if (proposed.length === 0) {
-    lines.push("No new upgrade paths discovered.\n");
-  } else {
-    lines.push(`Found ${String(proposed.length)} proposed upgrade path(s):
-`);
-    lines.push("| Model | Safe | Major | Confidence | Source | Reason |");
-    lines.push("|-------|------|-------|------------|--------|--------|");
-    for (const p of proposed) {
-      const src = p.sources.length > 0 ? p.sources.join(", ") : "-";
-      lines.push(
-        `| \`${p.key}\` | ${p.entry.safe ?? "-"} | ${p.entry.major ?? "-"} | ${p.confidence} | ${src} | ${p.reason} |`
-      );
+function findModelInFamilies(families, modelId) {
+  for (const [lineageKey, chain] of Object.entries(families)) {
+    for (let genIndex = 0; genIndex < chain.length; genIndex++) {
+      const generation = chain[genIndex] ?? [];
+      for (let posIndex = 0; posIndex < generation.length; posIndex++) {
+        if (generation[posIndex] === modelId) {
+          return { lineageKey, genIndex, posIndex };
+        }
+      }
     }
-    lines.push("");
   }
-  if (skipped.length > 0) {
-    lines.push("### Skipped Providers\n");
-    for (const s of skipped) {
-      lines.push(`- ${s}`);
+  return null;
+}
+
+// src/core/derive-upgrades.ts
+var PREFIX_RULES = [
+  { pattern: /^openai-/, prefixes: ["openai/"] },
+  { pattern: /^anthropic-/, prefixes: ["anthropic/"] },
+  { pattern: /^google-|^gemini-/, prefixes: ["google/", "gemini/"] },
+  { pattern: /^mistral-/, prefixes: ["mistralai/"] },
+  { pattern: /^deepseek/, prefixes: ["deepseek/"] },
+  { pattern: /^xai-/, prefixes: ["x-ai/"] },
+  { pattern: /^kimi/, prefixes: ["moonshotai/"] },
+  { pattern: /^qwen/, prefixes: ["qwen/"] },
+  { pattern: /^llama-|^meta-llama/, prefixes: ["meta-llama/"] }
+];
+function isVersionSequence(seq, sep) {
+  return seq.split(sep).every((p) => p.length <= 2);
+}
+function toHyphenVariant(id) {
+  const replaced = id.replace(
+    /\d+(?:\.(?!\d+[bBkK])\d+)+/g,
+    (m) => isVersionSequence(m, ".") ? m.replaceAll(".", "-") : m
+  );
+  return replaced !== id ? replaced : null;
+}
+function convertTargetSeparators(target, useHyphens) {
+  if (useHyphens) {
+    return target.replace(
+      /\d+(?:\.(?!\d+[bBkK])\d+)+/g,
+      (m) => isVersionSequence(m, ".") ? m.replaceAll(".", "-") : m
+    );
+  }
+  return target;
+}
+function convertEntrySeparators(entry) {
+  return {
+    safe: entry.safe ? convertTargetSeparators(entry.safe, true) : null,
+    major: entry.major ? convertTargetSeparators(entry.major, true) : null
+  };
+}
+function computeEntry(chain, genIndex, posIndex) {
+  const generation = chain[genIndex] ?? [];
+  const lastGen = chain[chain.length - 1] ?? [];
+  const ultimate = lastGen[lastGen.length - 1] ?? "";
+  const lastInGen = generation[generation.length - 1] ?? "";
+  const isLastInGen = posIndex === generation.length - 1;
+  const isLastGen = genIndex === chain.length - 1;
+  const safe = isLastInGen ? null : lastInGen;
+  const major = isLastGen && isLastInGen ? null : ultimate;
+  return { safe, major: major === safe ? null : major };
+}
+function addSeparatorVariants(map) {
+  const baseKeys = Object.keys(map);
+  for (const key of baseKeys) {
+    const hyphenKey = toHyphenVariant(key);
+    if (hyphenKey && !(hyphenKey in map)) {
+      const entry = map[key];
+      if (entry) map[hyphenKey] = convertEntrySeparators(entry);
     }
-    lines.push("");
   }
-  return lines.join("\n");
+}
+function matchingPrefixes(lineageKey) {
+  for (const rule of PREFIX_RULES) {
+    if (rule.pattern.test(lineageKey)) return rule.prefixes;
+  }
+  return [];
+}
+function addPrefixVariants(map, families) {
+  for (const [lineageKey, chain] of Object.entries(families)) {
+    const prefixes = matchingPrefixes(lineageKey);
+    if (prefixes.length === 0) continue;
+    for (const generation of chain) {
+      for (const modelId of generation) {
+        const entry = map[modelId];
+        if (!entry) continue;
+        for (const prefix of prefixes) {
+          const prefixedKey = prefix + modelId;
+          if (prefixedKey in map) continue;
+          map[prefixedKey] = {
+            safe: entry.safe ? prefix + entry.safe : null,
+            major: entry.major ? prefix + entry.major : null
+          };
+        }
+      }
+    }
+  }
+}
+function deriveUpgradeMap(families) {
+  const map = {};
+  for (const chain of Object.values(families)) {
+    for (let gi = 0; gi < chain.length; gi++) {
+      const gen = chain[gi] ?? [];
+      for (let pi = 0; pi < gen.length; pi++) {
+        const modelId = gen[pi];
+        if (modelId) map[modelId] = computeEntry(chain, gi, pi);
+      }
+    }
+  }
+  addSeparatorVariants(map);
+  addPrefixVariants(map, families);
+  addSeparatorVariants(map);
+  return map;
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   OPENROUTER_RULE,
+  PREFIX_RULES,
   PROVIDER_CONFIGS,
   SUPPORTED_EXTENSIONS,
+  allModelsInFamilies,
   applyFixes,
   buildPrefixRegex,
   checkVariantConsistency,
   computeEdits,
-  detectSafeUpgrades,
+  deriveUpgradeMap,
   diffModels,
   fetchAllProviderModels,
   fetchProviderModels,
   fileMatchesPrefixFilter,
   filterChatModels,
-  generateReport,
+  findModelInFamilies,
+  loadFamilies,
   loadUpgradeMap,
   lookupModel,
   scanDirectory,
   scanFile,
-  suggestMajorUpgrades,
-  syncVariantConsistency,
   validateUpgradeMap
 });
 //# sourceMappingURL=index.cjs.map

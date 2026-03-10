@@ -3667,10 +3667,25 @@ function fileMatchesPrefixFilter(content, prefixRegex) {
 var QUOTED_STRING_REGEX = /"([^"]+)"|'([^']+)'/g;
 var BACKTICK_REGEX = /`([^`]+)`/g;
 var BARE_TOKEN_REGEX = /[a-zA-Z][a-zA-Z0-9\-._/]+[a-zA-Z0-9]/g;
+function stripColonTag(id) {
+  const colonIdx = id.lastIndexOf(":");
+  if (colonIdx <= 0) return null;
+  const tag = id.slice(colonIdx);
+  if (/^:\d+$/.test(tag)) return null;
+  return { base: id.slice(0, colonIdx), tag };
+}
 function matchToResult(match, filePath, lineOffsets, upgradeMap) {
   const modelId = match[1] ?? match[2];
   if (!modelId) return void 0;
-  const entry = upgradeMap[modelId];
+  let entry = upgradeMap[modelId];
+  let colonTag = "";
+  if (!entry) {
+    const stripped = stripColonTag(modelId);
+    if (stripped) {
+      entry = upgradeMap[stripped.base];
+      if (entry) colonTag = stripped.tag;
+    }
+  }
   if (!entry) return void 0;
   const { line, column } = resolvePosition(lineOffsets, match.index);
   return {
@@ -3678,8 +3693,8 @@ function matchToResult(match, filePath, lineOffsets, upgradeMap) {
     line,
     column,
     matchedText: modelId,
-    safeUpgrade: entry.safe,
-    majorUpgrade: entry.major
+    safeUpgrade: entry.safe ? entry.safe + colonTag : null,
+    majorUpgrade: entry.major ? entry.major + colonTag : null
   };
 }
 function collectMatches(regex, content, filePath, lineOffsets, upgradeMap) {

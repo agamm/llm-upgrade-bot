@@ -1,7 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { UpgradeMap } from '../src/core/types.js'
 
 // Load .env file if present (local dev only — CI uses secrets)
 const envPath = join(import.meta.dirname, '..', '.env')
@@ -18,98 +17,70 @@ import {
   fetchAllProviderModels,
   filterChatModels,
   diffModels,
-  detectSafeUpgrades,
-  suggestMajorUpgrades,
-  generateReport,
   PROVIDER_CONFIGS,
 } from '../src/core/model-discovery.js'
-import type { ProposedEntry } from '../src/core/model-discovery.js'
-import { syncVariantConsistency } from '../src/core/variant-validator.js'
+import { loadFamilies, allModelsInFamilies } from '../src/core/families.js'
+import { deriveUpgradeMap } from '../src/core/derive-upgrades.js'
+import { classifyNewModels } from '../src/core/ai-classifier.js'
 
 const DATA_DIR = join(import.meta.dirname, '..', 'data')
+const FAMILIES_PATH = join(DATA_DIR, 'families.json')
 const UPGRADES_PATH = join(DATA_DIR, 'upgrades.json')
 const REPORT_PATH = join(DATA_DIR, 'discovery-report.md')
 
-/** Deduplicate proposals: auto (safe) wins over suggested, merging safe+major fields. */
-function deduplicateProposals(proposals: ProposedEntry[]): ProposedEntry[] {
-  const byKey = new Map<string, ProposedEntry>()
-  for (const p of proposals) {
-    const ex = byKey.get(p.key)
-    if (!ex) { byKey.set(p.key, p); continue }
-    if (p.confidence === 'auto' && ex.confidence !== 'auto') {
-      if (!p.entry.major && ex.entry.major) p.entry.major = ex.entry.major
-      byKey.set(p.key, p)
-    } else if (ex.confidence === 'auto' && p.confidence !== 'auto') {
-      if (!ex.entry.major && p.entry.major) ex.entry.major = p.entry.major
+function generateReport(
+  newModels: string[],
+  classified: string[],
+  unclassified: string[],
+  skipped: string[],
+): string {
+  const lines: string[] = ['## Model Discovery Report\n']
+
+  if (newModels.length === 0) {
+    lines.push('No new models discovered.\n')
+  } else {
+    lines.push(`Found ${String(newModels.length)} new model(s):\n`)
+    if (classified.length > 0) {
+      lines.push(`### Classified (${String(classified.length)})\n`)
+      for (const m of classified) lines.push(`- \`${m}\``)
+      lines.push('')
     }
-  }
-  return [...byKey.values()]
-}
-
-function formatEntry(entry: { safe: string | null; major: string | null }): string {
-  const safe = entry.safe === null ? 'null' : `"${entry.safe}"`
-  const major = entry.major === null ? 'null' : `"${entry.major}"`
-  return `{ "safe": ${safe}, "major": ${major} }`
-}
-
-/** Patch upgrades.json in-place, preserving blank-line grouping. */
-async function patchAndWrite(
-  raw: string,
-  map: UpgradeMap,
-  newEntries: Map<string, { safe: string | null; major: string | null }>,
-): Promise<void> {
-  const lines = raw.split('\n')
-  const origMap = JSON.parse(raw) as Record<string, unknown>
-  delete origMap['_pinned']
-  const updatedKeys = new Set(
-    Object.keys(map).filter((k) => JSON.stringify(map[k]) !== JSON.stringify(origMap[k])),
-  )
-  const result: string[] = []
-
-  for (const line of lines) {
-    const keyMatch = /^\s+"([^"]+)":\s*\{/.exec(line)
-    if (keyMatch && updatedKeys.has(keyMatch[1]) && map[keyMatch[1]]) {
-      const comma = line.trimEnd().endsWith(',') ? ',' : ''
-      result.push(`  "${keyMatch[1]}": ${formatEntry(map[keyMatch[1]])}${comma}`)
-      continue
-    }
-    result.push(line)
-  }
-
-  if (newEntries.size > 0) {
-    const closingIdx = result.lastIndexOf('}')
-    if (closingIdx > 0) {
-      const prevLine = result[closingIdx - 1]
-      if (prevLine && !prevLine.trimEnd().endsWith(',') && !prevLine.trimEnd().endsWith('{')) {
-        result[closingIdx - 1] = prevLine.trimEnd() + ','
-      }
-      const inserts = [...newEntries.entries()].map(([key, entry], i, arr) => {
-        const comma = i < arr.length - 1 ? ',' : ''
-        return `  "${key}": ${formatEntry(entry)}${comma}`
-      })
-      result.splice(closingIdx, 0, ...inserts)
+    if (unclassified.length > 0) {
+      lines.push(`### Unclassified (${String(unclassified.length)})\n`)
+      lines.push('These models need manual placement in `data/families.json`:\n')
+      for (const m of unclassified) lines.push(`- \`${m}\``)
+      lines.push('')
     }
   }
 
-  await writeFile(UPGRADES_PATH, result.join('\n'), 'utf-8')
+  if (skipped.length > 0) {
+    lines.push('### Skipped Providers\n')
+    for (const s of skipped) lines.push(`- ${s}`)
+    lines.push('')
+  }
+
+  return lines.join('\n')
 }
 
 async function main() {
-  const raw = await readFile(UPGRADES_PATH, 'utf-8')
-  const parsed = JSON.parse(raw) as Record<string, unknown>
-  const pinnedKeys = new Set<string>(
-    Array.isArray(parsed['_pinned']) ? (parsed['_pinned'] as string[]) : [],
-  )
-  delete parsed['_pinned']
-  const map = parsed as UpgradeMap
-  const knownKeys = new Set(Object.keys(map))
-
-  if (pinnedKeys.size > 0) {
-    console.log(`Loaded ${String(pinnedKeys.size)} pinned keys (protected)`)
+  // 1. Load families.json
+  const familiesResult = loadFamilies(FAMILIES_PATH)
+  if (!familiesResult.ok) {
+    console.error(familiesResult.error)
+    process.exit(1)
   }
-  console.log(`Loaded ${String(knownKeys.size)} known model entries`)
+  const families = familiesResult.data
+  const knownModels = allModelsInFamilies(families)
 
-  // Require all provider API keys (some optional — see GitHub issues)
+  // Also load derived upgrade map to include separator/prefix variants as known
+  const derivedMap = deriveUpgradeMap(families)
+  const allKnownKeys = new Set([...knownModels, ...Object.keys(derivedMap)])
+
+  console.log(
+    `Loaded ${String(Object.keys(families).length)} families (${String(knownModels.size)} models, ${String(allKnownKeys.size)} with variants)`,
+  )
+
+  // 2. Check required provider keys
   const optional = new Set(['OpenRouter', 'xAI', 'Together'])
   const missing = PROVIDER_CONFIGS
     .filter((c) => !optional.has(c.name) && !process.env[c.envVar])
@@ -119,86 +90,64 @@ async function main() {
     process.exit(1)
   }
 
+  // 3. Fetch from all providers
   console.log(`Fetching models from ${String(PROVIDER_CONFIGS.length)} providers...`)
-
   const { models, skipped } = await fetchAllProviderModels()
 
   const requiredFailures = skipped.filter((s) => !optional.has(s.split(':')[0] ?? ''))
-  for (const s of skipped) {
-    console.warn(`  Skipped: ${s}`)
-  }
+  for (const s of skipped) console.warn(`  Skipped: ${s}`)
   if (requiredFailures.length > 0) {
     console.error(`${String(requiredFailures.length)} required provider(s) failed. Aborting.`)
     process.exit(1)
   }
 
-  // Collect all discovered model IDs and build source map (model → providers)
+  // 4. Collect all discovered model IDs
   const allDiscovered: string[] = []
-  const sourceMap = new Map<string, string[]>()
   for (const [provider, ids] of Object.entries(models)) {
     console.log(`  ${provider}: ${String(ids.size)} models`)
-    for (const id of ids) {
-      allDiscovered.push(id)
-      const existing = sourceMap.get(id)
-      if (existing) existing.push(provider)
-      else sourceMap.set(id, [provider])
-    }
+    for (const id of ids) allDiscovered.push(id)
   }
 
-  // Diff and filter
-  const newModels = filterChatModels(diffModels(knownKeys, allDiscovered))
+  // 5. Diff and filter — skip colon-tagged models (OpenRouter variant tags)
+  // Skip colon-tagged models (OpenRouter variant tags like :free, :exacto)
+  // but keep Bedrock models with numeric suffixes like :0
+  const newModels = filterChatModels(diffModels(allKnownKeys, allDiscovered))
+    .filter((id) => !/:[a-zA-Z]/.test(id))
   console.log(`Found ${String(newModels.length)} new chat model(s)`)
 
   if (newModels.length === 0) {
     console.log('No new models to process.')
-    await writeFile(REPORT_PATH, generateReport([], skipped), 'utf-8')
+    await writeFile(REPORT_PATH, generateReport([], [], [], skipped), 'utf-8')
+
+    // Still derive and write upgrades.json to ensure it stays in sync
+    const upgradeMap = deriveUpgradeMap(families)
+    await writeFile(UPGRADES_PATH, JSON.stringify(upgradeMap, null, 2) + '\n', 'utf-8')
+    console.log(`Wrote ${String(Object.keys(upgradeMap).length)} entries to upgrades.json`)
     process.exit(0)
   }
 
-  // Detect upgrades, deduplicate, and exclude pinned keys
-  const safeProposed = detectSafeUpgrades(newModels, map, sourceMap)
-  const majorProposed = suggestMajorUpgrades(newModels, map, sourceMap)
-  const allProposed = deduplicateProposals([...safeProposed, ...majorProposed])
-    .filter((p) => !pinnedKeys.has(p.key))
+  // 6. AI classification (stub — currently returns all as unclassified)
+  const { families: updatedFamilies, unclassified } =
+    await classifyNewModels(families, newModels)
 
+  const classified = newModels.filter((m) => !unclassified.includes(m))
   console.log(
-    `Proposed: ${String(safeProposed.length)} safe, ${String(majorProposed.length)} major (${String(allProposed.length)} after dedup)`,
+    `Classified: ${String(classified.length)}, Unclassified: ${String(unclassified.length)}`,
   )
 
-  // Ensure old replaced major targets get entries pointing to new target
-  const newEntries = new Map<string, { safe: string | null; major: string | null }>()
-  for (const p of allProposed) {
-    const existing = map[p.key]
-    if (existing?.major && p.entry.major && existing.major !== p.entry.major) {
-      if (!map[existing.major] && !pinnedKeys.has(existing.major)) {
-        newEntries.set(existing.major, { safe: null, major: p.entry.major })
-      }
-    }
+  // 7. Write updated families.json (only if models were classified)
+  if (classified.length > 0) {
+    await writeFile(FAMILIES_PATH, JSON.stringify(updatedFamilies, null, 2) + '\n', 'utf-8')
+    console.log(`Updated families.json`)
   }
 
-  // Apply proposed entries to map
-  for (const p of allProposed) {
-    map[p.key] = p.entry
-  }
-  for (const [key, entry] of newEntries) {
-    map[key] = entry
-  }
+  // 8. Derive and write upgrades.json
+  const upgradeMap = deriveUpgradeMap(updatedFamilies)
+  await writeFile(UPGRADES_PATH, JSON.stringify(upgradeMap, null, 2) + '\n', 'utf-8')
+  console.log(`Wrote ${String(Object.keys(upgradeMap).length)} entries to upgrades.json`)
 
-  if (newEntries.size > 0) {
-    console.log(`Added ${String(newEntries.size)} transitive entry(ies) for replaced major targets`)
-  }
-
-  // Sync variant ↔ native consistency for all touched keys
-  const touchedKeys = new Set([...allProposed.map((p) => p.key), ...newEntries.keys()])
-  const syncCount = syncVariantConsistency(map, touchedKeys)
-  if (syncCount > 0) {
-    console.log(`Synced ${String(syncCount)} variant field(s) for consistency`)
-  }
-
-  await patchAndWrite(raw, map, newEntries)
-
-  // Write report
-  const report = generateReport(allProposed, skipped)
+  // 9. Write report
+  const report = generateReport(newModels, classified, unclassified, skipped)
   await writeFile(REPORT_PATH, report, 'utf-8')
   console.log(`Report written to ${REPORT_PATH}`)
 }

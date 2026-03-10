@@ -43,7 +43,7 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
-          if git diff --quiet data/upgrades.json; then
+          if git diff --quiet data/upgrades.json data/families.json; then
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
           else
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
@@ -60,7 +60,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: auto/discover-models
-          add-paths: data/upgrades.json
+          add-paths: |
+            data/upgrades.json
+            data/families.json
           title: 'chore: new LLM models discovered'
           body: ${{ steps.report.outputs.body }}
           commit-message: 'chore: add newly discovered LLM models'

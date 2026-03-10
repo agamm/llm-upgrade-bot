@@ -92,17 +92,8 @@ declare function applyFixes(edits: FileEdit[]): Promise<{
 
 declare function checkVariantConsistency(map: UpgradeMap, rules: VariantRule[]): string[];
 declare const OPENROUTER_RULE: VariantRule;
-/** Propagate safe/major from updated keys to their variant/native counterparts. */
-declare function syncVariantConsistency(map: UpgradeMap, updatedKeys: Set<string>, rules?: VariantRule[]): number;
 declare function validateUpgradeMap(map: UpgradeMap, rules?: VariantRule[]): Result<void, string[]>;
 
-interface ProposedEntry {
-    key: string;
-    entry: UpgradeEntry;
-    confidence: 'auto' | 'suggested' | 'unknown';
-    reason: string;
-    sources: string[];
-}
 declare const PROVIDER_CONFIGS: ProviderConfig[];
 declare function fetchProviderModels(config: ProviderConfig): Promise<Result<string[]>>;
 declare function fetchAllProviderModels(configs?: ProviderConfig[]): Promise<{
@@ -111,8 +102,26 @@ declare function fetchAllProviderModels(configs?: ProviderConfig[]): Promise<{
 }>;
 declare function filterChatModels(ids: string[]): string[];
 declare function diffModels(knownKeys: Set<string>, discovered: string[]): string[];
-declare function detectSafeUpgrades(newIds: string[], map: UpgradeMap, sourceMap?: Map<string, string[]>): ProposedEntry[];
-declare function suggestMajorUpgrades(newIds: string[], map: UpgradeMap, sourceMap?: Map<string, string[]>): ProposedEntry[];
-declare function generateReport(proposed: ProposedEntry[], skipped: string[]): string;
 
-export { type FileEdit, OPENROUTER_RULE, PROVIDER_CONFIGS, type ProposedEntry, type ProviderConfig, type Result, SUPPORTED_EXTENSIONS, type ScanOptions, type ScanReport, type ScanResult, type UpgradeEntry, type UpgradeMap, type VariantRule, applyFixes, buildPrefixRegex, checkVariantConsistency, computeEdits, detectSafeUpgrades, diffModels, fetchAllProviderModels, fetchProviderModels, fileMatchesPrefixFilter, filterChatModels, generateReport, loadUpgradeMap, lookupModel, scanDirectory, scanFile, suggestMajorUpgrades, syncVariantConsistency, validateUpgradeMap };
+type FamilyChain = string[][];
+type FamiliesMap = Record<string, FamilyChain>;
+/** Load families.json from disk. Returns Result<FamiliesMap>. */
+declare function loadFamilies(customPath?: string): Result<FamiliesMap>;
+/** Collect all model IDs across all lineages into a Set. */
+declare function allModelsInFamilies(families: FamiliesMap): Set<string>;
+/** Find which lineage a model belongs to and its position. Returns null if not found. */
+declare function findModelInFamilies(families: FamiliesMap, modelId: string): {
+    lineageKey: string;
+    genIndex: number;
+    posIndex: number;
+} | null;
+
+/** Prefix config: maps lineage key patterns to OpenRouter-style prefixes to auto-generate. */
+declare const PREFIX_RULES: {
+    pattern: RegExp;
+    prefixes: string[];
+}[];
+/** Derive a complete UpgradeMap from families data. Pure, no I/O. */
+declare function deriveUpgradeMap(families: FamiliesMap): UpgradeMap;
+
+export { type FamiliesMap, type FamilyChain, type FileEdit, OPENROUTER_RULE, PREFIX_RULES, PROVIDER_CONFIGS, type ProviderConfig, type Result, SUPPORTED_EXTENSIONS, type ScanOptions, type ScanReport, type ScanResult, type UpgradeEntry, type UpgradeMap, type VariantRule, allModelsInFamilies, applyFixes, buildPrefixRegex, checkVariantConsistency, computeEdits, deriveUpgradeMap, diffModels, fetchAllProviderModels, fetchProviderModels, fileMatchesPrefixFilter, filterChatModels, findModelInFamilies, loadFamilies, loadUpgradeMap, lookupModel, scanDirectory, scanFile, validateUpgradeMap };

@@ -262,6 +262,62 @@ describe('scanFile with markdown files', () => {
   })
 })
 
+describe('scanFile with colon-tagged models', () => {
+  it('strips OpenRouter colon tags and appends to upgrade targets', () => {
+    const content = 'model: "openai/gpt-4:free"\n'
+    const results = scanFile('config.yaml', content, testMap)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]).toEqual({
+      file: 'config.yaml',
+      line: 1,
+      column: 7,
+      matchedText: 'openai/gpt-4:free',
+      safeUpgrade: null,
+      majorUpgrade: 'openai/gpt-4.1:free',
+    })
+  })
+
+  it('preserves Bedrock numeric colon suffixes as exact match', () => {
+    const content = '{"modelId": "anthropic.claude-3-opus-20240229-v1:0"}\n'
+    const results = scanFile('config.json', content, testMap)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]?.matchedText).toBe('anthropic.claude-3-opus-20240229-v1:0')
+    expect(results[0]?.majorUpgrade).toBe('anthropic.claude-opus-4-6-v1:0')
+  })
+
+  it('handles colon-tagged native models', () => {
+    const content = "model='gpt-4:nitro'\n"
+    const results = scanFile('app.py', content, testMap)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]?.matchedText).toBe('gpt-4:nitro')
+    expect(results[0]?.safeUpgrade).toBeNull()
+    expect(results[0]?.majorUpgrade).toBe('gpt-4.1:nitro')
+  })
+
+  it('returns empty for unknown model with colon tag', () => {
+    const content = '"unknown-model:free"\n'
+    const results = scanFile('test.ts', content, testMap)
+    expect(results).toEqual([])
+  })
+
+  it('appends colon tag to both safe and major targets', () => {
+    const mapWithSafe = {
+      ...testMap,
+      'gpt-4o-2024-05-13': { safe: 'gpt-4o-2024-08-06', major: 'gpt-4.1' },
+    }
+    const content = '"gpt-4o-2024-05-13:exacto"\n'
+    const results = scanFile('test.ts', content, mapWithSafe)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]?.matchedText).toBe('gpt-4o-2024-05-13:exacto')
+    expect(results[0]?.safeUpgrade).toBe('gpt-4o-2024-08-06:exacto')
+    expect(results[0]?.majorUpgrade).toBe('gpt-4.1:exacto')
+  })
+})
+
 describe('scanFile with fixture files', () => {
   it('finds correct matches in api.ts', async () => {
     const content = await readFile(join(FIXTURES_DIR, 'api.ts'), 'utf-8')
