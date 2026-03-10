@@ -23,6 +23,7 @@ export { computeEdits, applyFixes } from './fixer.js'
 export {
   validateUpgradeMap,
   checkVariantConsistency,
+  syncVariantConsistency,
   OPENROUTER_RULE,
 } from './variant-validator.js'
 

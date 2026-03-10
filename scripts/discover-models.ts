@@ -6,14 +6,11 @@ import type { UpgradeMap } from '../src/core/types.js'
 // Load .env file if present (local dev only — CI uses secrets)
 const envPath = join(import.meta.dirname, '..', '.env')
 if (existsSync(envPath)) {
-  for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
-    const trimmed = line.trim()
-    if (trimmed === '' || trimmed.startsWith('#')) continue
-    const eq = trimmed.indexOf('=')
-    if (eq < 0) continue
-    const key = trimmed.slice(0, eq)
-    const value = trimmed.slice(eq + 1)
-    if (!process.env[key]) process.env[key] = value
+  for (const raw of readFileSync(envPath, 'utf-8').split('\n')) {
+    const l = raw.trim()
+    if (!l || l.startsWith('#')) continue
+    const eq = l.indexOf('=')
+    if (eq > 0 && !process.env[l.slice(0, eq)]) process.env[l.slice(0, eq)] = l.slice(eq + 1)
   }
 }
 
@@ -27,31 +24,74 @@ import {
   PROVIDER_CONFIGS,
 } from '../src/core/model-discovery.js'
 import type { ProposedEntry } from '../src/core/model-discovery.js'
+import { syncVariantConsistency } from '../src/core/variant-validator.js'
 
 const DATA_DIR = join(import.meta.dirname, '..', 'data')
 const UPGRADES_PATH = join(DATA_DIR, 'upgrades.json')
 const REPORT_PATH = join(DATA_DIR, 'discovery-report.md')
 
+/** Deduplicate proposals: auto (safe) wins over suggested, merging safe+major fields. */
 function deduplicateProposals(proposals: ProposedEntry[]): ProposedEntry[] {
   const byKey = new Map<string, ProposedEntry>()
   for (const p of proposals) {
-    const existing = byKey.get(p.key)
-    if (!existing) {
+    const ex = byKey.get(p.key)
+    if (!ex) { byKey.set(p.key, p); continue }
+    if (p.confidence === 'auto' && ex.confidence !== 'auto') {
+      if (!p.entry.major && ex.entry.major) p.entry.major = ex.entry.major
       byKey.set(p.key, p)
-    } else if (p.confidence === 'auto' && existing.confidence !== 'auto') {
-      // Auto (safe) wins, but preserve major from existing if auto doesn't have one
-      if (!p.entry.major && existing.entry.major) {
-        p.entry.major = existing.entry.major
-      }
-      byKey.set(p.key, p)
-    } else if (existing.confidence === 'auto' && p.confidence !== 'auto') {
-      // Keep auto but merge in major from suggested
-      if (!existing.entry.major && p.entry.major) {
-        existing.entry.major = p.entry.major
-      }
+    } else if (ex.confidence === 'auto' && p.confidence !== 'auto') {
+      if (!ex.entry.major && p.entry.major) ex.entry.major = p.entry.major
     }
   }
   return [...byKey.values()]
+}
+
+function formatEntry(entry: { safe: string | null; major: string | null }): string {
+  const safe = entry.safe === null ? 'null' : `"${entry.safe}"`
+  const major = entry.major === null ? 'null' : `"${entry.major}"`
+  return `{ "safe": ${safe}, "major": ${major} }`
+}
+
+/** Patch upgrades.json in-place, preserving blank-line grouping. */
+async function patchAndWrite(
+  raw: string,
+  map: UpgradeMap,
+  newEntries: Map<string, { safe: string | null; major: string | null }>,
+): Promise<void> {
+  const lines = raw.split('\n')
+  const origMap = JSON.parse(raw) as Record<string, unknown>
+  delete origMap['_pinned']
+  const updatedKeys = new Set(
+    Object.keys(map).filter((k) => JSON.stringify(map[k]) !== JSON.stringify(origMap[k])),
+  )
+  const result: string[] = []
+
+  for (const line of lines) {
+    const keyMatch = /^\s+"([^"]+)":\s*\{/.exec(line)
+    if (keyMatch && updatedKeys.has(keyMatch[1]) && map[keyMatch[1]]) {
+      const comma = line.trimEnd().endsWith(',') ? ',' : ''
+      result.push(`  "${keyMatch[1]}": ${formatEntry(map[keyMatch[1]])}${comma}`)
+      continue
+    }
+    result.push(line)
+  }
+
+  if (newEntries.size > 0) {
+    const closingIdx = result.lastIndexOf('}')
+    if (closingIdx > 0) {
+      const prevLine = result[closingIdx - 1]
+      if (prevLine && !prevLine.trimEnd().endsWith(',') && !prevLine.trimEnd().endsWith('{')) {
+        result[closingIdx - 1] = prevLine.trimEnd() + ','
+      }
+      const inserts = [...newEntries.entries()].map(([key, entry], i, arr) => {
+        const comma = i < arr.length - 1 ? ',' : ''
+        return `  "${key}": ${formatEntry(entry)}${comma}`
+      })
+      result.splice(closingIdx, 0, ...inserts)
+    }
+  }
+
+  await writeFile(UPGRADES_PATH, result.join('\n'), 'utf-8')
 }
 
 async function main() {
@@ -148,53 +188,14 @@ async function main() {
     console.log(`Added ${String(newEntries.size)} transitive entry(ies) for replaced major targets`)
   }
 
-  // Write updated map — preserve compact one-line-per-entry format
-  // Read original to patch in-place, keeping blank-line grouping intact
-  const lines = raw.split('\n')
-  const updatedKeys = new Set(allProposed.map((p) => p.key))
-  const result: string[] = []
-
-  for (const line of lines) {
-    // Match existing entries: `  "model-id": { ... }`
-    const keyMatch = /^\s+"([^"]+)":\s*\{/.exec(line)
-    if (keyMatch && updatedKeys.has(keyMatch[1])) {
-      const key = keyMatch[1]
-      const entry = map[key]
-      if (entry) {
-        const safe = entry.safe === null ? 'null' : `"${entry.safe}"`
-        const major = entry.major === null ? 'null' : `"${entry.major}"`
-        const comma = line.trimEnd().endsWith(',') ? ',' : ''
-        result.push(`  "${key}": { "safe": ${safe}, "major": ${major} }${comma}`)
-        continue
-      }
-    }
-    result.push(line)
+  // Sync variant ↔ native consistency for all touched keys
+  const touchedKeys = new Set([...allProposed.map((p) => p.key), ...newEntries.keys()])
+  const syncCount = syncVariantConsistency(map, touchedKeys)
+  if (syncCount > 0) {
+    console.log(`Synced ${String(syncCount)} variant field(s) for consistency`)
   }
 
-  // Insert new transitive entries before closing `}`
-  if (newEntries.size > 0) {
-    const closingIdx = result.lastIndexOf('}')
-    if (closingIdx > 0) {
-      // Ensure previous line has a trailing comma
-      const prevIdx = closingIdx - 1
-      const prevLine = result[prevIdx]
-      if (prevLine && !prevLine.trimEnd().endsWith(',') && !prevLine.trimEnd().endsWith('{')) {
-        result[prevIdx] = prevLine.trimEnd() + ','
-      }
-      const insertLines: string[] = []
-      const entries = [...newEntries.entries()]
-      for (let i = 0; i < entries.length; i++) {
-        const [key, entry] = entries[i]!
-        const safe = entry.safe === null ? 'null' : `"${entry.safe}"`
-        const major = entry.major === null ? 'null' : `"${entry.major}"`
-        const comma = i < entries.length - 1 ? ',' : ''
-        insertLines.push(`  "${key}": { "safe": ${safe}, "major": ${major} }${comma}`)
-      }
-      result.splice(closingIdx, 0, ...insertLines)
-    }
-  }
-
-  await writeFile(UPGRADES_PATH, result.join('\n'), 'utf-8')
+  await patchAndWrite(raw, map, newEntries)
 
   // Write report
   const report = generateReport(allProposed, skipped)

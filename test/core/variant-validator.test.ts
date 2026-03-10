@@ -3,6 +3,7 @@ import type { UpgradeMap, VariantRule } from '../../src/core/types.js'
 import {
   checkVariantConsistency,
   checkCrossTierUpgrades,
+  syncVariantConsistency,
   validateUpgradeMap,
   OPENROUTER_RULE,
 } from '../../src/core/variant-validator.js'
@@ -94,6 +95,38 @@ describe('checkCrossTierUpgrades', () => {
     }
     const errors = checkCrossTierUpgrades(map)
     expect(errors).toHaveLength(1)
+  })
+})
+
+describe('syncVariantConsistency', () => {
+  it('propagates major from variant to native', () => {
+    const map: UpgradeMap = {
+      'claude-haiku-4-5-20251001': { safe: null, major: null },
+      'anthropic/claude-haiku-4-5-20251001': { safe: null, major: 'anthropic/claude-haiku-4-5' },
+    }
+    const synced = syncVariantConsistency(map, new Set(['anthropic/claude-haiku-4-5-20251001']))
+    expect(synced).toBe(1)
+    expect(map['claude-haiku-4-5-20251001']!.major).toBe('claude-haiku-4-5')
+  })
+
+  it('propagates safe from native to variant', () => {
+    const map: UpgradeMap = {
+      'gpt-4': { safe: 'gpt-4-new', major: null },
+      'openai/gpt-4': { safe: null, major: null },
+    }
+    const synced = syncVariantConsistency(map, new Set(['gpt-4']))
+    expect(synced).toBe(1)
+    expect(map['openai/gpt-4']!.safe).toBe('openai/gpt-4-new')
+  })
+
+  it('does not overwrite existing values', () => {
+    const map: UpgradeMap = {
+      'gpt-4': { safe: 'gpt-4a', major: null },
+      'openai/gpt-4': { safe: 'openai/gpt-4b', major: null },
+    }
+    const synced = syncVariantConsistency(map, new Set(['gpt-4']))
+    expect(synced).toBe(0)
+    expect(map['openai/gpt-4']!.safe).toBe('openai/gpt-4b')
   })
 })
 

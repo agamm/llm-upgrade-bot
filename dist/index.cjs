@@ -39,6 +39,7 @@ __export(core_exports, {
   scanDirectory: () => scanDirectory,
   scanFile: () => scanFile,
   suggestMajorUpgrades: () => suggestMajorUpgrades,
+  syncVariantConsistency: () => syncVariantConsistency,
   validateUpgradeMap: () => validateUpgradeMap
 });
 module.exports = __toCommonJS(core_exports);
@@ -639,6 +640,41 @@ function checkCrossTierUpgrades(map) {
   }
   return errors;
 }
+function syncVariantConsistency(map, updatedKeys, rules = [OPENROUTER_RULE]) {
+  let synced = 0;
+  for (const key of updatedKeys) {
+    for (const rule of rules) {
+      if (rule.pattern.test(key)) {
+        const nativeKey = rule.extractNative(key);
+        if (!nativeKey || !map[nativeKey]) continue;
+        const prefix = key.slice(0, key.length - nativeKey.length);
+        const variantEntry = map[key];
+        const nativeEntry = map[nativeKey];
+        for (const field of ["safe", "major"]) {
+          if (variantEntry[field] !== null && nativeEntry[field] === null) {
+            nativeEntry[field] = variantEntry[field].replace(prefix, "");
+            synced++;
+          }
+        }
+      } else {
+        for (const [vKey, vEntry] of Object.entries(map)) {
+          if (!rule.pattern.test(vKey)) continue;
+          const nativeId = rule.extractNative(vKey);
+          if (nativeId !== key) continue;
+          const prefix = vKey.slice(0, vKey.length - key.length);
+          const nativeEntry = map[key];
+          for (const field of ["safe", "major"]) {
+            if (nativeEntry[field] !== null && vEntry[field] === null) {
+              vEntry[field] = `${prefix}${nativeEntry[field]}`;
+              synced++;
+            }
+          }
+        }
+      }
+    }
+  }
+  return synced;
+}
 function validateUpgradeMap(map, rules = [OPENROUTER_RULE]) {
   const errors = [
     ...checkVariantConsistency(map, rules),
@@ -904,6 +940,7 @@ function generateReport(proposed, skipped) {
   scanDirectory,
   scanFile,
   suggestMajorUpgrades,
+  syncVariantConsistency,
   validateUpgradeMap
 });
 //# sourceMappingURL=index.cjs.map

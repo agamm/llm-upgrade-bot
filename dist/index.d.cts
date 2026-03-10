@@ -92,6 +92,8 @@ declare function applyFixes(edits: FileEdit[]): Promise<{
 
 declare function checkVariantConsistency(map: UpgradeMap, rules: VariantRule[]): string[];
 declare const OPENROUTER_RULE: VariantRule;
+/** Propagate safe/major from updated keys to their variant/native counterparts. */
+declare function syncVariantConsistency(map: UpgradeMap, updatedKeys: Set<string>, rules?: VariantRule[]): number;
 declare function validateUpgradeMap(map: UpgradeMap, rules?: VariantRule[]): Result<void, string[]>;
 
 interface ProposedEntry {
@@ -113,4 +115,4 @@ declare function detectSafeUpgrades(newIds: string[], map: UpgradeMap, sourceMap
 declare function suggestMajorUpgrades(newIds: string[], map: UpgradeMap, sourceMap?: Map<string, string[]>): ProposedEntry[];
 declare function generateReport(proposed: ProposedEntry[], skipped: string[]): string;
 
-export { type FileEdit, OPENROUTER_RULE, PROVIDER_CONFIGS, type ProposedEntry, type ProviderConfig, type Result, SUPPORTED_EXTENSIONS, type ScanOptions, type ScanReport, type ScanResult, type UpgradeEntry, type UpgradeMap, type VariantRule, applyFixes, buildPrefixRegex, checkVariantConsistency, computeEdits, detectSafeUpgrades, diffModels, fetchAllProviderModels, fetchProviderModels, fileMatchesPrefixFilter, filterChatModels, generateReport, loadUpgradeMap, lookupModel, scanDirectory, scanFile, suggestMajorUpgrades, validateUpgradeMap };
+export { type FileEdit, OPENROUTER_RULE, PROVIDER_CONFIGS, type ProposedEntry, type ProviderConfig, type Result, SUPPORTED_EXTENSIONS, type ScanOptions, type ScanReport, type ScanResult, type UpgradeEntry, type UpgradeMap, type VariantRule, applyFixes, buildPrefixRegex, checkVariantConsistency, computeEdits, detectSafeUpgrades, diffModels, fetchAllProviderModels, fetchProviderModels, fileMatchesPrefixFilter, filterChatModels, generateReport, loadUpgradeMap, lookupModel, scanDirectory, scanFile, suggestMajorUpgrades, syncVariantConsistency, validateUpgradeMap };

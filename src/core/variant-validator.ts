@@ -85,6 +85,49 @@ export function checkCrossTierUpgrades(map: UpgradeMap): string[] {
   return errors
 }
 
+/** Propagate safe/major from updated keys to their variant/native counterparts. */
+export function syncVariantConsistency(
+  map: UpgradeMap,
+  updatedKeys: Set<string>,
+  rules: VariantRule[] = [OPENROUTER_RULE],
+): number {
+  let synced = 0
+  for (const key of updatedKeys) {
+    for (const rule of rules) {
+      if (rule.pattern.test(key)) {
+        // Variant key updated — propagate to native
+        const nativeKey = rule.extractNative(key)
+        if (!nativeKey || !map[nativeKey]) continue
+        const prefix = key.slice(0, key.length - nativeKey.length)
+        const variantEntry = map[key]!
+        const nativeEntry = map[nativeKey]
+        for (const field of ['safe', 'major'] as const) {
+          if (variantEntry[field] !== null && nativeEntry[field] === null) {
+            nativeEntry[field] = variantEntry[field]!.replace(prefix, '')
+            synced++
+          }
+        }
+      } else {
+        // Native key — propagate to matching variants
+        for (const [vKey, vEntry] of Object.entries(map)) {
+          if (!rule.pattern.test(vKey)) continue
+          const nativeId = rule.extractNative(vKey)
+          if (nativeId !== key) continue
+          const prefix = vKey.slice(0, vKey.length - key.length)
+          const nativeEntry = map[key]!
+          for (const field of ['safe', 'major'] as const) {
+            if (nativeEntry[field] !== null && vEntry[field] === null) {
+              vEntry[field] = `${prefix}${nativeEntry[field]}`
+              synced++
+            }
+          }
+        }
+      }
+    }
+  }
+  return synced
+}
+
 export function validateUpgradeMap(
   map: UpgradeMap,
   rules: VariantRule[] = [OPENROUTER_RULE],
