@@ -220,7 +220,7 @@ export function suggestMajorUpgrades(
   map: UpgradeMap,
   sourceMap?: Map<string, string[]>,
 ): ProposedEntry[] {
-  const proposed: ProposedEntry[] = []
+  const bestByKey = new Map<string, { proposal: ProposedEntry; version: number[] }>()
 
   const norm = normalizeVersionSeparators
   for (const newId of newIds) {
@@ -255,17 +255,23 @@ export function suggestMajorUpgrades(
 
       const majorId = matchSeparatorStyle(newId, existingKey)
 
-      proposed.push({
+      const proposal: ProposedEntry = {
         key: existingKey,
         entry: { safe: existingEntry.safe, major: majorId },
         confidence: 'suggested',
         reason: `Same line "${parsed.line}", higher version ${parsed.version.join('.')} > ${existingParsed.version.join('.')}`,
         sources: sourceMap?.get(newId) ?? [],
-      })
+      }
+
+      // Keep only the highest version proposal per key
+      const existing = bestByKey.get(existingKey)
+      if (!existing || isHigherVersion(parsed.version, existing.version)) {
+        bestByKey.set(existingKey, { proposal, version: parsed.version })
+      }
     }
   }
 
-  return proposed
+  return [...bestByKey.values()].map((v) => v.proposal)
 }
 
 export function generateReport(

@@ -320,6 +320,39 @@ describe('suggestMajorUpgrades', () => {
     expect(proposed.find((p) => p.key === 'gemini-4')?.entry.major).toBe('gemini-5')
   })
 
+  it('proposes only highest version when multiple newIds match same key', () => {
+    const map: UpgradeMap = {
+      'gemini-2.5-flash': { safe: null, major: null },
+    }
+    // Both gemini-3 and gemini-3.1 are new — only 3.1 should be proposed
+    const newIds = ['gemini-3-flash-preview', 'gemini-3.1-flash-preview']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('gemini-3.1-flash-preview')
+  })
+
+  it('proposes highest version regardless of array order', () => {
+    const map: UpgradeMap = {
+      'gemini-2.5-flash': { safe: null, major: null },
+    }
+    // Reversed order — higher version first
+    const newIds = ['gemini-3.1-flash-preview', 'gemini-3-flash-preview']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('gemini-3.1-flash-preview')
+  })
+
+  it('updates existing major to highest when multiple newIds found', () => {
+    const map: UpgradeMap = {
+      'gemini-2.0-flash': { safe: null, major: 'gemini-2.5-flash' },
+    }
+    // Both are higher than current major (2.5)
+    const newIds = ['gemini-3-flash-preview', 'gemini-3.1-flash-preview']
+    const proposed = suggestMajorUpgrades(newIds, map)
+    expect(proposed).toHaveLength(1)
+    expect(proposed[0]?.entry.major).toBe('gemini-3.1-flash-preview')
+  })
+
   it('skips colon-tagged models (provider variant tags)', () => {
     const map: UpgradeMap = {
       'moonshotai/kimi-k2': { safe: null, major: 'moonshotai/kimi-k2.5' },

@@ -771,7 +771,7 @@ function detectSafeUpgrades(newIds, map, sourceMap) {
   return proposed;
 }
 function suggestMajorUpgrades(newIds, map, sourceMap) {
-  const proposed = [];
+  const bestByKey = /* @__PURE__ */ new Map();
   const norm = normalizeVersionSeparators;
   for (const newId of newIds) {
     if (newId.includes(":")) continue;
@@ -796,16 +796,20 @@ function suggestMajorUpgrades(newIds, map, sourceMap) {
       if (norm(newId) === norm(existingKey)) continue;
       if (existingEntry.major !== null && norm(newId) === norm(existingEntry.major)) continue;
       const majorId = matchSeparatorStyle(newId, existingKey);
-      proposed.push({
+      const proposal = {
         key: existingKey,
         entry: { safe: existingEntry.safe, major: majorId },
         confidence: "suggested",
         reason: `Same line "${parsed.line}", higher version ${parsed.version.join(".")} > ${existingParsed.version.join(".")}`,
         sources: sourceMap?.get(newId) ?? []
-      });
+      };
+      const existing = bestByKey.get(existingKey);
+      if (!existing || isHigherVersion(parsed.version, existing.version)) {
+        bestByKey.set(existingKey, { proposal, version: parsed.version });
+      }
     }
   }
-  return proposed;
+  return [...bestByKey.values()].map((v) => v.proposal);
 }
 function generateReport(proposed, skipped) {
   const lines = ["## Model Discovery Report\n"];

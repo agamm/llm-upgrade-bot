@@ -36,9 +36,19 @@ function deduplicateProposals(proposals: ProposedEntry[]): ProposedEntry[] {
   const byKey = new Map<string, ProposedEntry>()
   for (const p of proposals) {
     const existing = byKey.get(p.key)
-    // Prefer 'auto' over 'suggested', keep first auto or last suggested
-    if (!existing || (p.confidence === 'auto' && existing.confidence !== 'auto')) {
+    if (!existing) {
       byKey.set(p.key, p)
+    } else if (p.confidence === 'auto' && existing.confidence !== 'auto') {
+      // Auto (safe) wins, but preserve major from existing if auto doesn't have one
+      if (!p.entry.major && existing.entry.major) {
+        p.entry.major = existing.entry.major
+      }
+      byKey.set(p.key, p)
+    } else if (existing.confidence === 'auto' && p.confidence !== 'auto') {
+      // Keep auto but merge in major from suggested
+      if (!existing.entry.major && p.entry.major) {
+        existing.entry.major = p.entry.major
+      }
     }
   }
   return [...byKey.values()]
