@@ -235,7 +235,7 @@
   "x-ai/grok-3-beta": { "safe": null, "major": "x-ai/grok-4-0709" },
   "x-ai/grok-3-mini-beta": { "safe": null, "major": "x-ai/grok-4-0709" },
 
-  "moonshotai/kimi-k2": { "safe": null, "major": "moonshotai/kimi-k2.5" },
+  "moonshotai/kimi-k2": { "safe": null, "major": "moonshotai/kimi-k2-0905:exacto" },
   "moonshotai/kimi-k2-0905": { "safe": null, "major": "moonshotai/kimi-k2.5" },
 
   "qwen/qwen-max": { "safe": null, "major": "qwen/qwen3-max" },
@@ -274,5 +274,6 @@
 
   "llama-3.3-70b-versatile": { "safe": null, "major": "meta-llama/llama-4-maverick-17b-128e-instruct" },
   "llama-3.1-8b-instant": { "safe": null, "major": "meta-llama/llama-4-scout-17b-16e-instruct" },
-  "qwen/qwen3-32b": { "safe": null, "major": "qwen/qwen3-max" }
+  "qwen/qwen3-32b": { "safe": null, "major": "qwen/qwen3-max" },
+  "moonshotai/kimi-k2.5": { "safe": null, "major": "moonshotai/kimi-k2-0905:exacto" }
 }
