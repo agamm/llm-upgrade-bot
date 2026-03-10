@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { UpgradeMap, VariantRule } from '../../src/core/types.js'
 import {
   checkVariantConsistency,
+  checkCrossTierUpgrades,
   validateUpgradeMap,
   OPENROUTER_RULE,
 } from '../../src/core/variant-validator.js'
@@ -44,6 +45,55 @@ describe('checkVariantConsistency', () => {
     }
     const errors = checkVariantConsistency(map, rules)
     expect(errors).toEqual([])
+  })
+})
+
+describe('checkCrossTierUpgrades', () => {
+  it('flags mini upgrading to flagship', () => {
+    const map: UpgradeMap = {
+      'gpt-5-mini': { safe: null, major: 'gpt-5.4' },
+    }
+    const errors = checkCrossTierUpgrades(map)
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toContain('mini')
+    expect(errors[0]).toContain('flagship')
+  })
+
+  it('flags nano upgrading to flagship', () => {
+    const map: UpgradeMap = {
+      'gpt-5-nano': { safe: null, major: 'gpt-6' },
+    }
+    const errors = checkCrossTierUpgrades(map)
+    expect(errors).toHaveLength(1)
+  })
+
+  it('allows mini upgrading to mini', () => {
+    const map: UpgradeMap = {
+      'gpt-4o-mini': { safe: null, major: 'gpt-5-mini' },
+    }
+    expect(checkCrossTierUpgrades(map)).toEqual([])
+  })
+
+  it('allows flagship upgrading to flagship', () => {
+    const map: UpgradeMap = {
+      'gpt-4': { safe: null, major: 'gpt-5.4' },
+    }
+    expect(checkCrossTierUpgrades(map)).toEqual([])
+  })
+
+  it('allows cross-line upgrades (naming convention changes)', () => {
+    const map: UpgradeMap = {
+      'claude-3-sonnet-20240229': { safe: null, major: 'claude-sonnet-4-6' },
+    }
+    expect(checkCrossTierUpgrades(map)).toEqual([])
+  })
+
+  it('catches prefixed variants too', () => {
+    const map: UpgradeMap = {
+      'openai/gpt-5-mini': { safe: null, major: 'openai/gpt-5.4' },
+    }
+    const errors = checkCrossTierUpgrades(map)
+    expect(errors).toHaveLength(1)
   })
 })
 

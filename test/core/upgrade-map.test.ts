@@ -29,7 +29,7 @@ describe('loadUpgradeMap', () => {
       expect(
         entry.major === null || typeof entry.major === 'string',
       ).toBe(true)
-      expect(entry.safe !== null || entry.major !== null).toBe(true)
+      // Leaf entries (latest models) intentionally have both null
     }
   })
 
@@ -182,11 +182,10 @@ describe('lookupModel', () => {
     expect(entry).toHaveProperty('major')
   })
 
-  it('returns entry with at least one upgrade path', () => {
+  it('returns entry for every key in map', () => {
     for (const key of Object.keys(map)) {
       const entry = lookupModel(map, key)
       expect(entry).toBeDefined()
-      expect(entry?.safe !== null || entry?.major !== null).toBe(true)
     }
   })
 

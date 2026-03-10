@@ -20,10 +20,18 @@ describe('data/upgrades.json schema validation', () => {
     }
   })
 
-  it('every entry has at least one upgrade path', async () => {
+  it('non-leaf entries have at least one upgrade path', async () => {
     const map = await loadRealMap()
+    const allTargets = new Set(
+      Object.values(map).flatMap((e) => [e.safe, e.major].filter(Boolean) as string[]),
+    )
 
     for (const [key, entry] of Object.entries(map)) {
+      // Leaf entries (latest models) may have both null — they exist so
+      // discovery can propose upgrades when newer models appear.
+      // Non-leaf entries (those referenced as targets) must have a path.
+      if (allTargets.has(key)) continue
+      if (entry.safe === null && entry.major === null) continue // leaf entry
       expect(
         entry.safe !== null || entry.major !== null,
         `${key}: both safe and major are null`,

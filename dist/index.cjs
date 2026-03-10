@@ -509,49 +509,6 @@ function applyEditsToContent(content, edits) {
   return { result: lines.join("\n"), appliedCount };
 }
 
-// src/core/variant-validator.ts
-function checkVariantConsistency(map, rules) {
-  const errors = [];
-  for (const [variantKey, entry] of Object.entries(map)) {
-    for (const rule of rules) {
-      if (!rule.pattern.test(variantKey)) continue;
-      const nativeId = rule.extractNative(variantKey);
-      if (!nativeId || !map[nativeId]) continue;
-      const nativeEntry = map[nativeId];
-      for (const field of ["safe", "major"]) {
-        const variantTarget = entry[field];
-        const nativeTarget = nativeEntry[field];
-        if (nativeTarget === null && variantTarget !== null) {
-          errors.push(
-            `${rule.name}: "${variantKey}".${field} is "${variantTarget}" but native "${nativeId}".${field} is null`
-          );
-        }
-        if (nativeTarget !== null && variantTarget === null) {
-          errors.push(
-            `${rule.name}: "${variantKey}".${field} is null but native "${nativeId}".${field} is "${nativeTarget}"`
-          );
-        }
-      }
-    }
-  }
-  return errors;
-}
-var OPENROUTER_RULE = {
-  name: "OpenRouter",
-  pattern: /^[a-z-]+\//,
-  extractNative: (key) => {
-    const slash = key.indexOf("/");
-    return slash > 0 ? key.slice(slash + 1) : null;
-  }
-};
-function validateUpgradeMap(map, rules = [OPENROUTER_RULE]) {
-  const errors = checkVariantConsistency(map, rules);
-  if (errors.length > 0) {
-    return { ok: false, error: errors };
-  }
-  return { ok: true, data: void 0 };
-}
-
 // src/core/model-version.ts
 var TIER_TOKENS = /* @__PURE__ */ new Set([
   "mini",
@@ -616,6 +573,81 @@ function isHigherVersion(a, b) {
     if (av < bv) return false;
   }
   return false;
+}
+
+// src/core/variant-validator.ts
+function checkVariantConsistency(map, rules) {
+  const errors = [];
+  for (const [variantKey, entry] of Object.entries(map)) {
+    for (const rule of rules) {
+      if (!rule.pattern.test(variantKey)) continue;
+      const nativeId = rule.extractNative(variantKey);
+      if (!nativeId || !map[nativeId]) continue;
+      const nativeEntry = map[nativeId];
+      for (const field of ["safe", "major"]) {
+        const variantTarget = entry[field];
+        const nativeTarget = nativeEntry[field];
+        if (nativeTarget === null && variantTarget !== null) {
+          errors.push(
+            `${rule.name}: "${variantKey}".${field} is "${variantTarget}" but native "${nativeId}".${field} is null`
+          );
+        }
+        if (nativeTarget !== null && variantTarget === null) {
+          errors.push(
+            `${rule.name}: "${variantKey}".${field} is null but native "${nativeId}".${field} is "${nativeTarget}"`
+          );
+        }
+      }
+    }
+  }
+  return errors;
+}
+var OPENROUTER_RULE = {
+  name: "OpenRouter",
+  pattern: /^[a-z-]+\//,
+  extractNative: (key) => {
+    const slash = key.indexOf("/");
+    return slash > 0 ? key.slice(slash + 1) : null;
+  }
+};
+var SIZE_TIERS = /* @__PURE__ */ new Set(["mini", "nano", "micro"]);
+function stripPrefix(id) {
+  const slash = id.indexOf("/");
+  return slash > 0 ? id.slice(slash + 1) : id;
+}
+function checkCrossTierUpgrades(map) {
+  const errors = [];
+  const norm = normalizeVersionSeparators;
+  for (const [key, entry] of Object.entries(map)) {
+    const keyParsed = parseModelVersion(norm(stripPrefix(key)));
+    if (!keyParsed) continue;
+    for (const field of ["safe", "major"]) {
+      const target = entry[field];
+      if (!target) continue;
+      const targetParsed = parseModelVersion(norm(stripPrefix(target)));
+      if (!targetParsed) continue;
+      if (keyParsed.line !== targetParsed.line) continue;
+      const keyIsSize = SIZE_TIERS.has(keyParsed.tier);
+      const targetIsSize = SIZE_TIERS.has(targetParsed.tier);
+      if (keyIsSize && !targetIsSize && targetParsed.tier === "") {
+        errors.push(`"${key}".${field} \u2192 "${target}": size tier "${keyParsed.tier}" upgrades to flagship`);
+      }
+      if (!keyIsSize && keyParsed.tier === "" && targetIsSize) {
+        errors.push(`"${key}".${field} \u2192 "${target}": flagship downgrades to size tier "${targetParsed.tier}"`);
+      }
+    }
+  }
+  return errors;
+}
+function validateUpgradeMap(map, rules = [OPENROUTER_RULE]) {
+  const errors = [
+    ...checkVariantConsistency(map, rules),
+    ...checkCrossTierUpgrades(map)
+  ];
+  if (errors.length > 0) {
+    return { ok: false, error: errors };
+  }
+  return { ok: true, data: void 0 };
 }
 
 // src/core/model-discovery.ts
