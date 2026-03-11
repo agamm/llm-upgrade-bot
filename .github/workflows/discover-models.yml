@@ -45,6 +45,8 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
+            Current directory: /home/runner/work/llm-upgrade-bot/llm-upgrade-bot
+
             Read `data/new-models.txt` for newly discovered model IDs.
             Read `data/families.json` for current model families.
 
@@ -64,7 +66,7 @@ jobs:
             - `pnpm tsx scripts/derive-upgrades.ts`
             - `pnpm tsx scripts/validate-variants.ts`
           claude_args: '--allowedTools "Read,Edit,Write,Bash(pnpm:*),WebSearch,WebFetch"'
-          show_full_output: true
+          show_full_output: false
 
       - name: Check for changes
         id: changes
