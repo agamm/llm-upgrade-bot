@@ -28,7 +28,7 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - `data/upgrades.json` — **derived** from families.json via `deriveUpgradeMap()`. Flat map `{ "model-id": { "safe": "...", "major": "..." } }`. Includes separator variants (dot↔hyphen) and prefix variants (openai/, anthropic/, etc.)
 - `src/core/families.ts` — load/query families.json
 - `src/core/derive-upgrades.ts` — pure derivation: families.json → upgrades.json (separator variants, prefix variants)
-- `src/core/ai-classifier.ts` — stub for AI-assisted classification of new models (TODO: implement with Anthropic API)
+- `src/core/ai-classifier.ts` — AI-assisted classification of new models via Claude Agent SDK (WebSearch + WebFetch + structured output)
 
 ## Guardrails
 - **Max file:** 200 lines — refactor before exceeding
@@ -51,6 +51,8 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - Scanner strips OpenRouter colon tags (`:free`, `:exacto`, `:nitro`) at scan time — no need for colon-tagged entries in upgrades.json
 - `derive-upgrades` generates separator variants (4.6→4-6) and prefix variants (openai/X, anthropic/X) from native lineages via `PREFIX_RULES`
 - Cross-tier prevention: families.json separates mini/nano/flagship into distinct lineages by design
+- AI classifier pre-filters structural noise (fine-tunes, colon-tagged, org-scoped) before sending to the agent — all other relevance decisions (non-chat models, provider prefixes) are left to the AI
+- Agent SDK `outputFormat` returns structured JSON (placements + newLineages + unclassified) — no regex parsing of agent text
 - `.github/workflows/discover-models.yml` — hourly auto-discovery, opens PR via peter-evans/create-pull-request (commits upgrades.json + families.json)
 
 ## GitHub Action Versioning
@@ -77,3 +79,5 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - Commander: use `new Command()` (not global), `parseAsync()` for async, `.exitOverride()` for tests
 - pnpm v10+ blocks postinstall scripts by default — use `pnpm.onlyBuiltDependencies`
 - tsup: watch `package.json` exports field for ESM/CJS dual output
+- Agent SDK (`@anthropic-ai/claude-agent-sdk`) requires `ANTHROPIC_API_KEY` — classifier gracefully falls back to all-unclassified if missing
+- `prefilter()` only strips structural noise (fine-tunes, colon-tagged, org-scoped) — resist adding content-based heuristics (embed, tts, etc.), let the AI judge relevance

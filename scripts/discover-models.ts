@@ -21,7 +21,7 @@ import {
 } from '../src/core/model-discovery.js'
 import { loadFamilies, allModelsInFamilies } from '../src/core/families.js'
 import { deriveUpgradeMap } from '../src/core/derive-upgrades.js'
-import { classifyNewModels } from '../src/core/ai-classifier.js'
+import { classifyNewModels, prefilter } from '../src/core/ai-classifier.js'
 
 const DATA_DIR = join(import.meta.dirname, '..', 'data')
 const FAMILIES_PATH = join(DATA_DIR, 'families.json')
@@ -108,12 +108,11 @@ async function main() {
     for (const id of ids) allDiscovered.push(id)
   }
 
-  // 5. Diff and filter — skip colon-tagged models (OpenRouter variant tags)
-  // Skip colon-tagged models (OpenRouter variant tags like :free, :exacto)
-  // but keep Bedrock models with numeric suffixes like :0
-  const newModels = filterChatModels(diffModels(allKnownKeys, allDiscovered))
+  // 5. Diff, filter chat models, then pre-filter noise
+  const rawNew = filterChatModels(diffModels(allKnownKeys, allDiscovered))
     .filter((id) => !/:[a-zA-Z]/.test(id))
-  console.log(`Found ${String(newModels.length)} new chat model(s)`)
+  const newModels = prefilter(rawNew)
+  console.log(`Found ${String(rawNew.length)} new chat model(s), ${String(newModels.length)} after pre-filtering`)
 
   if (newModels.length === 0) {
     console.log('No new models to process.')
