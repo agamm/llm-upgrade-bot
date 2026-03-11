@@ -97,8 +97,13 @@ ${JSON.stringify(families, null, 2)}
 ${ids.map((id) => `- \`${id}\``).join('\n')}
 
 ## Instructions
-Use WebSearch and WebFetch to research models you're unsure about.
-Check provider docs, release announcements, changelogs.
+If you recognize a model (e.g. a known provider's naming pattern, a dated snapshot
+of an existing model), classify it directly — no need to search.
+Only use WebSearch/WebFetch for models you genuinely don't recognize or don't
+know where to place.
+
+Skip models that are obviously NOT chat/reasoning LLMs (embeddings, TTS, image
+generation, moderation, etc.) — put them in unclassified.
 
 Each model goes in exactly ONE of these:
 1. **placements** — model belongs in an existing family
@@ -153,7 +158,9 @@ export async function classifyNewModels(
     unclassified: [...newModelIds],
   }
 
+  console.log(`[classify] Starting agent for ${String(newModelIds.length)} models`)
   let output: AgentOutput | undefined
+  let turns = 0
 
   try {
     for await (const msg of query({
@@ -164,11 +171,24 @@ export async function classifyNewModels(
         allowedTools: ['WebSearch', 'WebFetch'],
         maxTurns: 20,
         systemPrompt:
-          'You classify LLM model IDs into a families.json structure. ' +
+          'You classify LLM model IDs into model families in families.json. ' +
           'Use WebSearch/WebFetch to research unfamiliar models.',
         outputFormat: { type: 'json_schema', schema: OUTPUT_SCHEMA },
       },
     })) {
+      if (msg.type === 'assistant') {
+        turns++
+        const toolUses = 'content' in msg && Array.isArray(msg.content)
+          ? (msg.content as { type: string; name?: string }[])
+            .filter((b) => b.type === 'tool_use')
+            .map((b) => b.name)
+          : []
+        if (toolUses.length > 0) {
+          console.log(`[classify] Turn ${String(turns)}: ${toolUses.join(', ')}`)
+        } else {
+          console.log(`[classify] Turn ${String(turns)}: thinking`)
+        }
+      }
       if ('result' in msg && 'structured_output' in msg && msg.structured_output) {
         output = msg.structured_output as AgentOutput
       }
@@ -181,6 +201,22 @@ export async function classifyNewModels(
   if (!output) {
     console.warn('AI classification returned no structured output')
     return fallback
+  }
+
+  const { placements, newFamilies, unclassified: unc } = output
+  console.log(
+    `[classify] Done: ${String(placements.length)} placements, ` +
+    `${String(newFamilies.length)} new families, ` +
+    `${String(unc.length)} unclassified`,
+  )
+  for (const p of placements) {
+    console.log(`  → ${p.modelId} → ${p.familyKey}[${String(p.genIndex)}] (${p.position})`)
+  }
+  for (const f of newFamilies) {
+    console.log(`  + ${f.familyKey}: ${JSON.stringify(f.generations)}`)
+  }
+  if (unc.length > 0) {
+    console.log(`  ? ${unc.join(', ')}`)
   }
 
   return {

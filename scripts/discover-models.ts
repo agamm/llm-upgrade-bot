@@ -22,6 +22,9 @@ import {
 import { loadFamilies, allModelsInFamilies } from '../src/core/families.js'
 import { deriveUpgradeMap } from '../src/core/derive-upgrades.js'
 import { classifyNewModels, prefilter } from '../src/core/ai-classifier.js'
+import { stripPrefix } from '../src/core/variants.js'
+
+const CLASSIFY_BATCH_SIZE = 20
 
 const DATA_DIR = join(import.meta.dirname, '..', 'data')
 const FAMILIES_PATH = join(DATA_DIR, 'families.json')
@@ -108,8 +111,18 @@ async function main() {
     for (const id of ids) allDiscovered.push(id)
   }
 
-  // 5. Diff, filter chat models, then pre-filter noise
-  const rawNew = filterChatModels(diffModels(allKnownKeys, allDiscovered))
+  // 5. Strip prefixes, deduplicate, diff against known, filter noise
+  const seen = new Set<string>()
+  const deduped: string[] = []
+  for (const id of allDiscovered) {
+    const bare = stripPrefix(id)
+    if (!seen.has(bare)) {
+      seen.add(bare)
+      deduped.push(bare)
+    }
+  }
+
+  const rawNew = filterChatModels(diffModels(allKnownKeys, deduped))
     .filter((id) => !/:[a-zA-Z]/.test(id))
   const newModels = prefilter(rawNew)
   console.log(`Found ${String(rawNew.length)} new chat model(s), ${String(newModels.length)} after pre-filtering`)
@@ -125,13 +138,19 @@ async function main() {
     process.exit(0)
   }
 
-  // 6. AI classification (stub — currently returns all as unclassified)
+  // 6. AI classification — capped to avoid long runs; remaining picked up next run
+  const batch = newModels.slice(0, CLASSIFY_BATCH_SIZE)
+  const deferred = newModels.slice(CLASSIFY_BATCH_SIZE)
+  if (deferred.length > 0) {
+    console.log(`Classifying ${String(batch.length)} of ${String(newModels.length)} (${String(deferred.length)} deferred to next run)`)
+  }
   const { families: updatedFamilies, unclassified } =
-    await classifyNewModels(families, newModels)
+    await classifyNewModels(families, batch)
 
-  const classified = newModels.filter((m) => !unclassified.includes(m))
+  const classified = batch.filter((m) => !unclassified.includes(m))
   console.log(
-    `Classified: ${String(classified.length)}, Unclassified: ${String(unclassified.length)}`,
+    `Classified: ${String(classified.length)}, Unclassified: ${String(unclassified.length)}` +
+    (deferred.length > 0 ? `, Deferred: ${String(deferred.length)}` : ''),
   )
 
   // 7. Write updated families.json (only if models were classified)
