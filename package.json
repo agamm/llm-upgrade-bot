@@ -1,6 +1,6 @@
 {
   "name": "llm-upgrade-bot",
-  "version": "0.1.0",
+  "version": "1.7.0",
   "description": "Dependabot for LLM model versions — scans codebases for outdated model strings and proposes upgrades",
   "type": "module",
   "bin": {

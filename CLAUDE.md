@@ -70,7 +70,7 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - **Breaking changes** (action input/output removals, behavior changes): bump major tag (`v2`)
 - `dist/` is in `.gitignore` but force-tracked — the composite action runs `node $ACTION_PATH/dist/cli.js`
 - `action.yml` has `branding` for Marketplace (icon: refresh-cw, color: blue)
-- Current version: **v1.6.0**
+- Current version: **v1.7.0**
 
 ## Gotchas
 - Version components in model IDs are 1–2 digits. 3+ digit components (e.g., `0905`, `0711`) are date/build codes — `toHyphenVariant` and `isVersionSequence` in derive-upgrades.ts skip them
