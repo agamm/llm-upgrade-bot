@@ -158,7 +158,8 @@ export async function classifyNewModels(
     unclassified: [...newModelIds],
   }
 
-  console.log(`[classify] Starting agent for ${String(newModelIds.length)} models`)
+  console.log(`[classify] Starting agent for ${String(newModelIds.length)} models:`)
+  for (const id of newModelIds) console.log(`  - ${id}`)
   let output: AgentOutput | undefined
   let turns = 0
 
@@ -178,15 +179,23 @@ export async function classifyNewModels(
     })) {
       if (msg.type === 'assistant') {
         turns++
-        const toolUses = 'content' in msg && Array.isArray(msg.content)
-          ? (msg.content as { type: string; name?: string }[])
-            .filter((b) => b.type === 'tool_use')
-            .map((b) => b.name)
+        const blocks = 'content' in msg && Array.isArray(msg.content)
+          ? (msg.content as { type: string; name?: string; text?: string; input?: unknown }[])
           : []
-        if (toolUses.length > 0) {
-          console.log(`[classify] Turn ${String(turns)}: ${toolUses.join(', ')}`)
+        const tools = blocks.filter((b) => b.type === 'tool_use')
+        const text = blocks
+          .filter((b) => b.type === 'text' && b.text)
+          .map((b) => (b.text ?? '').slice(0, 200))
+          .join(' ')
+        if (tools.length > 0) {
+          for (const t of tools) {
+            const input = JSON.stringify(t.input ?? {}).slice(0, 150)
+            console.log(`[classify] Turn ${String(turns)}: ${t.name ?? '?'}(${input})`)
+          }
+        } else if (text) {
+          console.log(`[classify] Turn ${String(turns)}: ${text.slice(0, 200)}`)
         } else {
-          console.log(`[classify] Turn ${String(turns)}: thinking`)
+          console.log(`[classify] Turn ${String(turns)}: (no content)`)
         }
       }
       if ('result' in msg && 'structured_output' in msg && msg.structured_output) {
