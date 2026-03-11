@@ -9,7 +9,14 @@
     ["gpt-4.1-2025-04-14", "gpt-4.1"],
     ["gpt-4.5-preview-2025-02-27", "gpt-4.5-preview"],
     ["gpt-5"],
-    ["gpt-5.2", "gpt-5.3-chat", "gpt-5.4"]
+    ["gpt-5.1"],
+    ["gpt-5.2"],
+    ["gpt-5.4"]
+  ],
+  "openai-chat": [
+    ["gpt-5-chat-latest"],
+    ["gpt-5.2-chat-latest"],
+    ["gpt-5.3-chat-latest"]
   ],
   "openai-mini": [
     ["gpt-3.5-turbo-0301", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-0125", "gpt-3.5-turbo"],
@@ -23,8 +30,15 @@
     ["gpt-4.1-nano-2025-04-14", "gpt-4.1-nano"],
     ["gpt-5-nano"]
   ],
+  "openai-codex": [
+    ["gpt-5-codex"],
+    ["gpt-5.2-codex"],
+    ["gpt-5.3-codex"]
+  ],
   "openai-pro": [
-    ["gpt-5.2-pro", "gpt-5.4-pro"]
+    ["gpt-5-pro"],
+    ["gpt-5.2-pro"],
+    ["gpt-5.4-pro"]
   ],
   "openai-reasoning": [
     ["o1-preview-2024-09-12", "o1-preview"],
@@ -159,19 +173,19 @@
   ],
 
   "deepseek-chat": [
-    ["deepseek-coder"],
-    ["deepseek-chat"],
-    ["deepseek-reasoner"],
-    ["deepseek-r1"],
+    ["deepseek-coder", "deepseek-chat"],
     ["deepseek-v3.2"]
+  ],
+  "deepseek-reasoning": [
+    ["deepseek-reasoner", "deepseek-r1"]
   ],
 
   "xai-grok": [
     ["grok-2"],
     ["grok-2-vision-latest"],
     ["grok-3", "grok-3-beta"],
-    ["grok-4"],
-    ["grok-4-0709"]
+    ["grok-4-0709", "grok-4"],
+    ["grok-4.1"]
   ],
   "xai-grok-mini": [
     ["grok-3-mini", "grok-3-mini-beta"]

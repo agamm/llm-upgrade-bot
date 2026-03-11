@@ -87,15 +87,27 @@
     "safe": null,
     "major": "gpt-5.4"
   },
-  "gpt-5.2": {
-    "safe": "gpt-5.4",
-    "major": null
+  "gpt-5.1": {
+    "safe": null,
+    "major": "gpt-5.4"
   },
-  "gpt-5.3-chat": {
-    "safe": "gpt-5.4",
-    "major": null
+  "gpt-5.2": {
+    "safe": null,
+    "major": "gpt-5.4"
   },
   "gpt-5.4": {
+    "safe": null,
+    "major": null
+  },
+  "gpt-5-chat-latest": {
+    "safe": null,
+    "major": "gpt-5.3-chat-latest"
+  },
+  "gpt-5.2-chat-latest": {
+    "safe": null,
+    "major": "gpt-5.3-chat-latest"
+  },
+  "gpt-5.3-chat-latest": {
     "safe": null,
     "major": null
   },
@@ -163,9 +175,25 @@
     "safe": null,
     "major": null
   },
-  "gpt-5.2-pro": {
-    "safe": "gpt-5.4-pro",
+  "gpt-5-codex": {
+    "safe": null,
+    "major": "gpt-5.3-codex"
+  },
+  "gpt-5.2-codex": {
+    "safe": null,
+    "major": "gpt-5.3-codex"
+  },
+  "gpt-5.3-codex": {
+    "safe": null,
     "major": null
+  },
+  "gpt-5-pro": {
+    "safe": null,
+    "major": "gpt-5.4-pro"
+  },
+  "gpt-5.2-pro": {
+    "safe": null,
+    "major": "gpt-5.4-pro"
   },
   "gpt-5.4-pro": {
     "safe": null,
@@ -560,18 +588,10 @@
     "major": null
   },
   "deepseek-coder": {
-    "safe": null,
+    "safe": "deepseek-chat",
     "major": "deepseek-v3.2"
   },
   "deepseek-chat": {
-    "safe": null,
-    "major": "deepseek-v3.2"
-  },
-  "deepseek-reasoner": {
-    "safe": null,
-    "major": "deepseek-v3.2"
-  },
-  "deepseek-r1": {
     "safe": null,
     "major": "deepseek-v3.2"
   },
@@ -579,27 +599,39 @@
     "safe": null,
     "major": null
   },
+  "deepseek-reasoner": {
+    "safe": "deepseek-r1",
+    "major": null
+  },
+  "deepseek-r1": {
+    "safe": null,
+    "major": null
+  },
   "grok-2": {
     "safe": null,
-    "major": "grok-4-0709"
+    "major": "grok-4.1"
   },
   "grok-2-vision-latest": {
     "safe": null,
-    "major": "grok-4-0709"
+    "major": "grok-4.1"
   },
   "grok-3": {
     "safe": "grok-3-beta",
-    "major": "grok-4-0709"
+    "major": "grok-4.1"
   },
   "grok-3-beta": {
     "safe": null,
-    "major": "grok-4-0709"
+    "major": "grok-4.1"
+  },
+  "grok-4-0709": {
+    "safe": "grok-4",
+    "major": "grok-4.1"
   },
   "grok-4": {
     "safe": null,
-    "major": "grok-4-0709"
+    "major": "grok-4.1"
   },
-  "grok-4-0709": {
+  "grok-4.1": {
     "safe": null,
     "major": null
   },
@@ -859,15 +891,23 @@
     "safe": null,
     "major": "gpt-5-4"
   },
-  "gpt-5-2": {
-    "safe": "gpt-5-4",
-    "major": null
+  "gpt-5-1": {
+    "safe": null,
+    "major": "gpt-5-4"
   },
-  "gpt-5-3-chat": {
-    "safe": "gpt-5-4",
-    "major": null
+  "gpt-5-2": {
+    "safe": null,
+    "major": "gpt-5-4"
   },
   "gpt-5-4": {
+    "safe": null,
+    "major": null
+  },
+  "gpt-5-2-chat-latest": {
+    "safe": null,
+    "major": "gpt-5-3-chat-latest"
+  },
+  "gpt-5-3-chat-latest": {
     "safe": null,
     "major": null
   },
@@ -919,9 +959,17 @@
     "safe": null,
     "major": "gpt-5-nano"
   },
-  "gpt-5-2-pro": {
-    "safe": "gpt-5-4-pro",
+  "gpt-5-2-codex": {
+    "safe": null,
+    "major": "gpt-5-3-codex"
+  },
+  "gpt-5-3-codex": {
+    "safe": null,
     "major": null
+  },
+  "gpt-5-2-pro": {
+    "safe": null,
+    "major": "gpt-5-4-pro"
   },
   "gpt-5-4-pro": {
     "safe": null,
@@ -1056,6 +1104,10 @@
     "major": null
   },
   "deepseek-v3-2": {
+    "safe": null,
+    "major": null
+  },
+  "grok-4-1": {
     "safe": null,
     "major": null
   },
@@ -1279,15 +1331,27 @@
     "safe": null,
     "major": "openai/gpt-5.4"
   },
-  "openai/gpt-5.2": {
-    "safe": "openai/gpt-5.4",
-    "major": null
+  "openai/gpt-5.1": {
+    "safe": null,
+    "major": "openai/gpt-5.4"
   },
-  "openai/gpt-5.3-chat": {
-    "safe": "openai/gpt-5.4",
-    "major": null
+  "openai/gpt-5.2": {
+    "safe": null,
+    "major": "openai/gpt-5.4"
   },
   "openai/gpt-5.4": {
+    "safe": null,
+    "major": null
+  },
+  "openai/gpt-5-chat-latest": {
+    "safe": null,
+    "major": "openai/gpt-5.3-chat-latest"
+  },
+  "openai/gpt-5.2-chat-latest": {
+    "safe": null,
+    "major": "openai/gpt-5.3-chat-latest"
+  },
+  "openai/gpt-5.3-chat-latest": {
     "safe": null,
     "major": null
   },
@@ -1355,9 +1419,25 @@
     "safe": null,
     "major": null
   },
-  "openai/gpt-5.2-pro": {
-    "safe": "openai/gpt-5.4-pro",
+  "openai/gpt-5-codex": {
+    "safe": null,
+    "major": "openai/gpt-5.3-codex"
+  },
+  "openai/gpt-5.2-codex": {
+    "safe": null,
+    "major": "openai/gpt-5.3-codex"
+  },
+  "openai/gpt-5.3-codex": {
+    "safe": null,
     "major": null
+  },
+  "openai/gpt-5-pro": {
+    "safe": null,
+    "major": "openai/gpt-5.4-pro"
+  },
+  "openai/gpt-5.2-pro": {
+    "safe": null,
+    "major": "openai/gpt-5.4-pro"
   },
   "openai/gpt-5.4-pro": {
     "safe": null,
@@ -1844,18 +1924,10 @@
     "major": null
   },
   "deepseek/deepseek-coder": {
-    "safe": null,
+    "safe": "deepseek/deepseek-chat",
     "major": "deepseek/deepseek-v3.2"
   },
   "deepseek/deepseek-chat": {
-    "safe": null,
-    "major": "deepseek/deepseek-v3.2"
-  },
-  "deepseek/deepseek-reasoner": {
-    "safe": null,
-    "major": "deepseek/deepseek-v3.2"
-  },
-  "deepseek/deepseek-r1": {
     "safe": null,
     "major": "deepseek/deepseek-v3.2"
   },
@@ -1863,27 +1935,39 @@
     "safe": null,
     "major": null
   },
+  "deepseek/deepseek-reasoner": {
+    "safe": "deepseek/deepseek-r1",
+    "major": null
+  },
+  "deepseek/deepseek-r1": {
+    "safe": null,
+    "major": null
+  },
   "x-ai/grok-2": {
     "safe": null,
-    "major": "x-ai/grok-4-0709"
+    "major": "x-ai/grok-4.1"
   },
   "x-ai/grok-2-vision-latest": {
     "safe": null,
-    "major": "x-ai/grok-4-0709"
+    "major": "x-ai/grok-4.1"
   },
   "x-ai/grok-3": {
     "safe": "x-ai/grok-3-beta",
-    "major": "x-ai/grok-4-0709"
+    "major": "x-ai/grok-4.1"
   },
   "x-ai/grok-3-beta": {
     "safe": null,
-    "major": "x-ai/grok-4-0709"
+    "major": "x-ai/grok-4.1"
+  },
+  "x-ai/grok-4-0709": {
+    "safe": "x-ai/grok-4",
+    "major": "x-ai/grok-4.1"
   },
   "x-ai/grok-4": {
     "safe": null,
-    "major": "x-ai/grok-4-0709"
+    "major": "x-ai/grok-4.1"
   },
-  "x-ai/grok-4-0709": {
+  "x-ai/grok-4.1": {
     "safe": null,
     "major": null
   },
@@ -1987,15 +2071,23 @@
     "safe": null,
     "major": "openai/gpt-5-4"
   },
-  "openai/gpt-5-2": {
-    "safe": "openai/gpt-5-4",
-    "major": null
+  "openai/gpt-5-1": {
+    "safe": null,
+    "major": "openai/gpt-5-4"
   },
-  "openai/gpt-5-3-chat": {
-    "safe": "openai/gpt-5-4",
-    "major": null
+  "openai/gpt-5-2": {
+    "safe": null,
+    "major": "openai/gpt-5-4"
   },
   "openai/gpt-5-4": {
+    "safe": null,
+    "major": null
+  },
+  "openai/gpt-5-2-chat-latest": {
+    "safe": null,
+    "major": "openai/gpt-5-3-chat-latest"
+  },
+  "openai/gpt-5-3-chat-latest": {
     "safe": null,
     "major": null
   },
@@ -2047,9 +2139,17 @@
     "safe": null,
     "major": "openai/gpt-5-nano"
   },
-  "openai/gpt-5-2-pro": {
-    "safe": "openai/gpt-5-4-pro",
+  "openai/gpt-5-2-codex": {
+    "safe": null,
+    "major": "openai/gpt-5-3-codex"
+  },
+  "openai/gpt-5-3-codex": {
+    "safe": null,
     "major": null
+  },
+  "openai/gpt-5-2-pro": {
+    "safe": null,
+    "major": "openai/gpt-5-4-pro"
   },
   "openai/gpt-5-4-pro": {
     "safe": null,
@@ -2248,6 +2348,10 @@
     "major": null
   },
   "deepseek/deepseek-v3-2": {
+    "safe": null,
+    "major": null
+  },
+  "x-ai/grok-4-1": {
     "safe": null,
     "major": null
   },
