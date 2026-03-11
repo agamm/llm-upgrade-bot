@@ -64,6 +64,7 @@ jobs:
             - `pnpm tsx scripts/derive-upgrades.ts`
             - `pnpm tsx scripts/validate-variants.ts`
           claude_args: '--allowedTools "Read,Edit,Write,Bash(pnpm:*),WebSearch,WebFetch"'
+          show_full_output: true
 
       - name: Check for changes
         id: changes
