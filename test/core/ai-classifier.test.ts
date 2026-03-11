@@ -78,9 +78,9 @@ describe('applyOutput', () => {
   it('appends a model to an existing generation', () => {
     const output: AgentOutput = {
       placements: [
-        { modelId: 'gpt-5-2025-08-07', lineageKey: 'openai-flagship', genIndex: 1, position: 'append' },
+        { modelId: 'gpt-5-2025-08-07', familyKey: 'openai-flagship', genIndex: 1, position: 'append' },
       ],
-      newLineages: [],
+      newFamilies: [],
       unclassified: [],
     }
     const result = applyOutput(TINY_FAMILIES, output)
@@ -90,9 +90,9 @@ describe('applyOutput', () => {
   it('inserts a new generation after genIndex', () => {
     const output: AgentOutput = {
       placements: [
-        { modelId: 'gpt-5.5', lineageKey: 'openai-flagship', genIndex: 1, position: 'new_generation' },
+        { modelId: 'gpt-5.5', familyKey: 'openai-flagship', genIndex: 1, position: 'new_generation' },
       ],
-      newLineages: [],
+      newFamilies: [],
       unclassified: [],
     }
     const result = applyOutput(TINY_FAMILIES, output)
@@ -107,9 +107,9 @@ describe('applyOutput', () => {
   it('prepends a generation with genIndex -1', () => {
     const output: AgentOutput = {
       placements: [
-        { modelId: 'gpt-3.5-turbo', lineageKey: 'openai-flagship', genIndex: -1, position: 'new_generation' },
+        { modelId: 'gpt-3.5-turbo', familyKey: 'openai-flagship', genIndex: -1, position: 'new_generation' },
       ],
-      newLineages: [],
+      newFamilies: [],
       unclassified: [],
     }
     const result = applyOutput(TINY_FAMILIES, output)
@@ -120,8 +120,8 @@ describe('applyOutput', () => {
   it('creates a new lineage', () => {
     const output: AgentOutput = {
       placements: [],
-      newLineages: [
-        { lineageKey: 'cohere-command', generations: [['command-r'], ['command-r-plus']] },
+      newFamilies: [
+        { familyKey: 'cohere-command', generations: [['command-r'], ['command-r-plus']] },
       ],
       unclassified: [],
     }
@@ -132,8 +132,8 @@ describe('applyOutput', () => {
   it('does not overwrite existing lineage', () => {
     const output: AgentOutput = {
       placements: [],
-      newLineages: [
-        { lineageKey: 'openai-flagship', generations: [['fake']] },
+      newFamilies: [
+        { familyKey: 'openai-flagship', generations: [['fake']] },
       ],
       unclassified: [],
     }
@@ -144,9 +144,9 @@ describe('applyOutput', () => {
   it('ignores placements with unknown lineage key', () => {
     const output: AgentOutput = {
       placements: [
-        { modelId: 'foo-1', lineageKey: 'nonexistent', genIndex: 0, position: 'append' },
+        { modelId: 'foo-1', familyKey: 'nonexistent', genIndex: 0, position: 'append' },
       ],
-      newLineages: [],
+      newFamilies: [],
       unclassified: [],
     }
     const result = applyOutput(TINY_FAMILIES, output)
@@ -157,9 +157,9 @@ describe('applyOutput', () => {
     const original = structuredClone(TINY_FAMILIES)
     const output: AgentOutput = {
       placements: [
-        { modelId: 'gpt-5.5', lineageKey: 'openai-flagship', genIndex: 2, position: 'append' },
+        { modelId: 'gpt-5.5', familyKey: 'openai-flagship', genIndex: 2, position: 'append' },
       ],
-      newLineages: [],
+      newFamilies: [],
       unclassified: [],
     }
     applyOutput(TINY_FAMILIES, output)
@@ -169,11 +169,11 @@ describe('applyOutput', () => {
   it('handles multiple placements and new lineages together', () => {
     const output: AgentOutput = {
       placements: [
-        { modelId: 'gpt-5.4-2026-03-05', lineageKey: 'openai-flagship', genIndex: 2, position: 'append' },
-        { modelId: 'gpt-5-mini-2025-08-07', lineageKey: 'openai-mini', genIndex: 1, position: 'append' },
+        { modelId: 'gpt-5.4-2026-03-05', familyKey: 'openai-flagship', genIndex: 2, position: 'append' },
+        { modelId: 'gpt-5-mini-2025-08-07', familyKey: 'openai-mini', genIndex: 1, position: 'append' },
       ],
-      newLineages: [
-        { lineageKey: 'openai-nano', generations: [['gpt-5-nano']] },
+      newFamilies: [
+        { familyKey: 'openai-nano', generations: [['gpt-5-nano']] },
       ],
       unclassified: ['random-model-xyz'],
     }
