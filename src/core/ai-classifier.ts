@@ -177,26 +177,24 @@ export async function classifyNewModels(
         outputFormat: { type: 'json_schema', schema: OUTPUT_SCHEMA },
       },
     })) {
-      if (msg.type === 'assistant') {
+      // Structured logging for CI visibility
+      if (msg.type === 'assistant' && 'message' in msg) {
         turns++
-        const blocks = 'content' in msg && Array.isArray(msg.content)
-          ? (msg.content as { type: string; name?: string; text?: string; input?: unknown }[])
-          : []
-        const tools = blocks.filter((b) => b.type === 'tool_use')
-        const text = blocks
-          .filter((b) => b.type === 'text' && b.text)
-          .map((b) => (b.text ?? '').slice(0, 200))
-          .join(' ')
-        if (tools.length > 0) {
-          for (const t of tools) {
-            const input = JSON.stringify(t.input ?? {}).slice(0, 150)
-            console.log(`[classify] Turn ${String(turns)}: ${t.name ?? '?'}(${input})`)
+        const m = msg.message as { content?: { type: string; name?: string; input?: unknown; thinking?: string; text?: string }[] }
+        for (const b of m.content ?? []) {
+          if (b.type === 'tool_use') {
+            console.log(`[classify] Turn ${String(turns)}: ${b.name}(${JSON.stringify(b.input).slice(0, 150)})`)
+          } else if (b.type === 'thinking') {
+            console.log(`[classify] Turn ${String(turns)}: thinking... ${(b.thinking ?? '').slice(0, 150)}`)
+          } else if (b.type === 'text' && b.text) {
+            console.log(`[classify] Turn ${String(turns)}: ${b.text.slice(0, 200)}`)
           }
-        } else if (text) {
-          console.log(`[classify] Turn ${String(turns)}: ${text.slice(0, 200)}`)
-        } else {
-          console.log(`[classify] Turn ${String(turns)}: (no content)`)
         }
+      } else if (msg.type === 'user') {
+        // tool results — just log that we got them
+      } else if (msg.type === 'system') {
+        const sub = 'subtype' in msg ? String((msg as Record<string, unknown>).subtype) : ''
+        if (sub === 'init') console.log(`[classify] Agent initialized`)
       }
       if ('result' in msg && 'structured_output' in msg && msg.structured_output) {
         output = msg.structured_output as AgentOutput
