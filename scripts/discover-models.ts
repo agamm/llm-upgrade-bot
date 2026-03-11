@@ -133,7 +133,7 @@ async function main() {
 
     // Still derive and write upgrades.json to ensure it stays in sync
     const upgradeMap = deriveUpgradeMap(families)
-    await writeFile(UPGRADES_PATH, JSON.stringify(upgradeMap, null, 2) + '\n', 'utf-8')
+    await writeFile(UPGRADES_PATH, JSON.stringify(upgradeMap) + '\n', 'utf-8')
     console.log(`Wrote ${String(Object.keys(upgradeMap).length)} entries to upgrades.json`)
     process.exit(0)
   }
@@ -155,13 +155,13 @@ async function main() {
 
   // 7. Write updated families.json (only if models were classified)
   if (classified.length > 0) {
-    await writeFile(FAMILIES_PATH, JSON.stringify(updatedFamilies, null, 2) + '\n', 'utf-8')
+    await writeFile(FAMILIES_PATH, JSON.stringify(updatedFamilies) + '\n', 'utf-8')
     console.log(`Updated families.json`)
   }
 
   // 8. Derive and write upgrades.json
   const upgradeMap = deriveUpgradeMap(updatedFamilies)
-  await writeFile(UPGRADES_PATH, JSON.stringify(upgradeMap, null, 2) + '\n', 'utf-8')
+  await writeFile(UPGRADES_PATH, JSON.stringify(upgradeMap) + '\n', 'utf-8')
   console.log(`Wrote ${String(Object.keys(upgradeMap).length)} entries to upgrades.json`)
 
   // 9. Write report
