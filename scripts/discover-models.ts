@@ -1,5 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises'
-import { existsSync, readFileSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
+import { existsSync, readFileSync, appendFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Load .env file if present (local dev only — CI uses secrets)
@@ -21,48 +21,18 @@ import {
 } from '../src/core/model-discovery.js'
 import { loadFamilies, allModelsInFamilies } from '../src/core/families.js'
 import { deriveUpgradeMap } from '../src/core/derive-upgrades.js'
-import { classifyNewModels, prefilter } from '../src/core/ai-classifier.js'
-import { stripPrefix } from '../src/core/variants.js'
-
-const CLASSIFY_BATCH_SIZE = 20
+import { stripPrefix, prefilter } from '../src/core/variants.js'
 
 const DATA_DIR = join(import.meta.dirname, '..', 'data')
 const FAMILIES_PATH = join(DATA_DIR, 'families.json')
 const UPGRADES_PATH = join(DATA_DIR, 'upgrades.json')
-const REPORT_PATH = join(DATA_DIR, 'discovery-report.md')
+const NEW_MODELS_PATH = join(DATA_DIR, 'new-models.txt')
 
-function generateReport(
-  newModels: string[],
-  classified: string[],
-  unclassified: string[],
-  skipped: string[],
-): string {
-  const lines: string[] = ['## Model Discovery Report\n']
-
-  if (newModels.length === 0) {
-    lines.push('No new models discovered.\n')
-  } else {
-    lines.push(`Found ${String(newModels.length)} new model(s):\n`)
-    if (classified.length > 0) {
-      lines.push(`### Classified (${String(classified.length)})\n`)
-      for (const m of classified) lines.push(`- \`${m}\``)
-      lines.push('')
-    }
-    if (unclassified.length > 0) {
-      lines.push(`### Unclassified (${String(unclassified.length)})\n`)
-      lines.push('These models need manual placement in `data/families.json`:\n')
-      for (const m of unclassified) lines.push(`- \`${m}\``)
-      lines.push('')
-    }
+function setGitHubOutput(key: string, value: string): void {
+  const outputFile = process.env['GITHUB_OUTPUT']
+  if (outputFile) {
+    appendFileSync(outputFile, `${key}=${value}\n`)
   }
-
-  if (skipped.length > 0) {
-    lines.push('### Skipped Providers\n')
-    for (const s of skipped) lines.push(`- ${s}`)
-    lines.push('')
-  }
-
-  return lines.join('\n')
 }
 
 async function main() {
@@ -129,7 +99,7 @@ async function main() {
 
   if (newModels.length === 0) {
     console.log('No new models to process.')
-    await writeFile(REPORT_PATH, generateReport([], [], [], skipped), 'utf-8')
+    setGitHubOutput('has_new_models', 'false')
 
     // Still derive and write upgrades.json to ensure it stays in sync
     const upgradeMap = deriveUpgradeMap(families)
@@ -138,36 +108,10 @@ async function main() {
     process.exit(0)
   }
 
-  // 6. AI classification — capped to avoid long runs; remaining picked up next run
-  const batch = newModels.slice(0, CLASSIFY_BATCH_SIZE)
-  const deferred = newModels.slice(CLASSIFY_BATCH_SIZE)
-  if (deferred.length > 0) {
-    console.log(`Classifying ${String(batch.length)} of ${String(newModels.length)} (${String(deferred.length)} deferred to next run)`)
-  }
-  const { families: updatedFamilies, unclassified } =
-    await classifyNewModels(families, batch)
-
-  const classified = batch.filter((m) => !unclassified.includes(m))
-  console.log(
-    `Classified: ${String(classified.length)}, Unclassified: ${String(unclassified.length)}` +
-    (deferred.length > 0 ? `, Deferred: ${String(deferred.length)}` : ''),
-  )
-
-  // 7. Write updated families.json (only if models were classified)
-  if (classified.length > 0) {
-    await writeFile(FAMILIES_PATH, JSON.stringify(updatedFamilies) + '\n', 'utf-8')
-    console.log(`Updated families.json`)
-  }
-
-  // 8. Derive and write upgrades.json
-  const upgradeMap = deriveUpgradeMap(updatedFamilies)
-  await writeFile(UPGRADES_PATH, JSON.stringify(upgradeMap) + '\n', 'utf-8')
-  console.log(`Wrote ${String(Object.keys(upgradeMap).length)} entries to upgrades.json`)
-
-  // 9. Write report
-  const report = generateReport(newModels, classified, unclassified, skipped)
-  await writeFile(REPORT_PATH, report, 'utf-8')
-  console.log(`Report written to ${REPORT_PATH}`)
+  // 6. Write new model IDs to file for Claude Code Action to classify
+  await writeFile(NEW_MODELS_PATH, newModels.join('\n') + '\n', 'utf-8')
+  console.log(`Wrote ${String(newModels.length)} new model(s) to ${NEW_MODELS_PATH}`)
+  setGitHubOutput('has_new_models', 'true')
 }
 
 main().catch((err: unknown) => {

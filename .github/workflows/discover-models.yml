@@ -25,7 +25,8 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
 
-      - name: Discover models
+      - name: Discover new models
+        id: discover
         run: pnpm tsx scripts/discover-models.ts
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -37,8 +38,31 @@ jobs:
           TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
-      - name: Validate upgrades.json
-        run: pnpm tsx scripts/validate-variants.ts
+      - name: Classify new models
+        if: steps.discover.outputs.has_new_models == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Read `data/new-models.txt` for newly discovered model IDs.
+            Read `data/families.json` for current model families.
+
+            ## families.json structure
+            - Keys = family names (e.g. "openai-flagship")
+            - Outer array = major generations, inner = safe upgrades
+            - Un-timestamped aliases go LAST in inner arrays
+            - Date-stamped snapshots share inner array with alias
+            - Dots for version separators (gpt-4.1 not gpt-4-1)
+            - Never mix tiers (mini/nano/flagship = separate families)
+            - Provider-prefixed IDs handled by derivation — don't add them
+
+            Classify directly if recognized, WebSearch if unfamiliar,
+            skip non-chat/reasoning LLMs. Edit families.json (compact JSON).
+
+            Then run:
+            - `pnpm tsx scripts/derive-upgrades.ts`
+            - `pnpm tsx scripts/validate-variants.ts`
+          claude_args: '--allowedTools "Read,Edit,Write,Bash(pnpm:*),WebSearch,WebFetch"'
 
       - name: Check for changes
         id: changes
@@ -48,11 +72,6 @@ jobs:
           else
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Read report into variable
-        if: steps.changes.outputs.has_changes == 'true'
-        id: report
-        run: echo "body<<REPORT_EOF" >> "$GITHUB_OUTPUT" && cat data/discovery-report.md >> "$GITHUB_OUTPUT" && echo "REPORT_EOF" >> "$GITHUB_OUTPUT"
 
       - name: Create pull request
         if: steps.changes.outputs.has_changes == 'true'
@@ -64,6 +83,8 @@ jobs:
             data/upgrades.json
             data/families.json
           title: 'chore: new LLM models discovered'
-          body: ${{ steps.report.outputs.body }}
+          body: |
+            Automatically discovered and classified new LLM models.
+            Review the changes to `data/families.json` and `data/upgrades.json`.
           commit-message: 'chore: add newly discovered LLM models'
           delete-branch: true

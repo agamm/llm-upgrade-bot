@@ -11,7 +11,8 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - Format: `pnpm format` (prettier)
 - Typecheck: `pnpm typecheck` (tsc --noEmit)
 - Validate: `pnpm validate` (variant consistency + families.json derivation check)
-- Discover: `pnpm discover` (fetch provider APIs, classify new models, derive upgrades.json)
+- Discover: `pnpm discover` (fetch provider APIs, write new-models.txt)
+- Derive: `pnpm tsx scripts/derive-upgrades.ts` (families.json → upgrades.json)
 
 ## Code Style
 - Functional-first: pure functions, no classes, data-in/data-out
@@ -20,7 +21,7 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 
 ## Architecture
 - `src/core/` — scanner, upgrade-map, fixer, variant-validator, model-discovery (platform-agnostic, no I/O opinions)
-- `scripts/` — validate-variants.ts, discover-models.ts (CLI entry points for maintenance tasks)
+- `scripts/` — validate-variants.ts, discover-models.ts, derive-upgrades.ts (CLI entry points for maintenance tasks)
 - `src/cli/` — Commander.js commands, terminal output (picocolors + nanospinner)
 - `action.yml` — composite GitHub Action (no src/action/ dir, delegates to CLI + peter-evans/create-pull-request)
 - Dependency direction: cli/ → core/. Core never imports from cli.
@@ -28,7 +29,7 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - `data/upgrades.json` — **derived** from families.json via `deriveUpgradeMap()`. Flat map `{ "model-id": { "safe": "...", "major": "..." } }`. Includes separator variants (dot↔hyphen) and prefix variants (openai/, anthropic/, etc.)
 - `src/core/families.ts` — load/query families.json
 - `src/core/derive-upgrades.ts` — pure derivation: families.json → upgrades.json (separator variants, prefix variants)
-- `src/core/ai-classifier.ts` — AI-assisted classification of new models via Claude Agent SDK (WebSearch + WebFetch + structured output)
+- `src/core/variants.ts` — `stripPrefix()` for provider prefixes, `prefilter()` for structural noise removal
 
 ## Guardrails
 - **Max file:** 200 lines — refactor before exceeding
@@ -51,9 +52,8 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - Scanner strips OpenRouter colon tags (`:free`, `:exacto`, `:nitro`) at scan time — no need for colon-tagged entries in upgrades.json
 - `derive-upgrades` generates separator variants (4.6→4-6) and prefix variants (openai/X, anthropic/X) from native lineages via `PREFIX_RULES`
 - Cross-tier prevention: families.json separates mini/nano/flagship into distinct lineages by design
-- AI classifier pre-filters structural noise (fine-tunes, colon-tagged, org-scoped) before sending to the agent — all other relevance decisions (non-chat models, provider prefixes) are left to the AI
-- Agent SDK `outputFormat` returns structured JSON (placements + newLineages + unclassified) — no regex parsing of agent text
-- `.github/workflows/discover-models.yml` — hourly auto-discovery, opens PR via peter-evans/create-pull-request (commits upgrades.json + families.json)
+- `prefilter()` in `variants.ts` strips structural noise (fine-tunes, colon-tagged, org-scoped) — all other relevance decisions left to the AI
+- `.github/workflows/discover-models.yml` — hourly auto-discovery: TypeScript fetches/diffs models → writes `data/new-models.txt` → Claude Code Action classifies into families.json → derives upgrades.json → opens PR via peter-evans/create-pull-request
 
 ## GitHub Action Versioning
 - Published on GitHub Marketplace. Users pin to major version tag: `uses: agamm/llm-upgrade-bot@v1`
@@ -79,5 +79,4 @@ TypeScript CLI + GitHub Action — scans codebases for outdated LLM model string
 - Commander: use `new Command()` (not global), `parseAsync()` for async, `.exitOverride()` for tests
 - pnpm v10+ blocks postinstall scripts by default — use `pnpm.onlyBuiltDependencies`
 - tsup: watch `package.json` exports field for ESM/CJS dual output
-- Agent SDK (`@anthropic-ai/claude-agent-sdk`) requires `ANTHROPIC_API_KEY` — classifier gracefully falls back to all-unclassified if missing
 - `prefilter()` only strips structural noise (fine-tunes, colon-tagged, org-scoped) — resist adding content-based heuristics (embed, tts, etc.), let the AI judge relevance
