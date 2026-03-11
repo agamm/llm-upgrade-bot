@@ -173,7 +173,9 @@ export async function classifyNewModels(
         maxTurns: 20,
         systemPrompt:
           'You classify LLM model IDs into model families in families.json. ' +
-          'Use WebSearch/WebFetch to research unfamiliar models.',
+          'Use WebSearch/WebFetch to research unfamiliar models. ' +
+          `The current date is ${new Date().toISOString().slice(0, 10)}. ` +
+          'When searching, don\'t add a year unless the model name includes a date.',
         outputFormat: { type: 'json_schema', schema: OUTPUT_SCHEMA },
       },
     })) {
