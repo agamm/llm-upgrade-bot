@@ -143,7 +143,6 @@
     ["mistral-tiny"],
     ["open-mistral-7b"],
     ["open-mistral-nemo"],
-    ["open-mixtral-8x7b"],
     ["mistral-small-2402"],
     ["mistral-small-24b-instruct-2501"],
     ["mistral-small-3.1-24b-instruct"],
@@ -155,6 +154,7 @@
     ["mistral-medium-3.1"]
   ],
   "mistral-large": [
+    ["open-mixtral-8x7b"],
     ["open-mixtral-8x22b"],
     ["mistral-large-2402","mistral-large-2407","mistral-large-2411","mistral-large-2512"]
   ],
