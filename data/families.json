@@ -8,9 +8,10 @@
     ["gpt-4o-2024-05-13","gpt-4o-2024-08-06","gpt-4o-2024-11-20","gpt-4o"],
     ["gpt-4.1-2025-04-14","gpt-4.1"],
     ["gpt-4.5-preview-2025-02-27","gpt-4.5-preview"],
-    ["gpt-5-2025-08-07","gpt-5"],
-    ["gpt-5.1-2025-11-13","gpt-5.1"],
-    ["gpt-5.2-2025-12-11","gpt-5.2"],
+    ["gpt-5-2025-08-07","gpt-5","gpt-5-chat"],
+    ["gpt-5.1-2025-11-13","gpt-5.1","gpt-5.1-chat"],
+    ["gpt-5.2-2025-12-11","gpt-5.2","gpt-5.2-chat"],
+    ["gpt-5.3","gpt-5.3-chat"],
     ["gpt-5.4-2026-03-05","gpt-5.4"]
   ],
   "openai-mini": [
@@ -27,7 +28,7 @@
   ],
   "openai-codex": [
     ["gpt-5-codex"],
-    ["gpt-5.1-codex"],
+    ["gpt-5.1-codex","gpt-5.1-codex-max"],
     ["gpt-5.2-codex"],
     ["gpt-5.3-codex"]
   ],
@@ -52,19 +53,21 @@
   ],
   "openai-audio": [
     ["gpt-4o-audio-preview-2024-12-17","gpt-4o-audio-preview-2025-06-03","gpt-4o-audio-preview"],
-    ["gpt-audio"]
+    ["gpt-audio-2025-08-28","gpt-audio"],
+    ["gpt-audio-1.5"]
   ],
   "openai-audio-mini": [
-    ["gpt-4o-mini-audio-preview"],
-    ["gpt-audio-mini"]
+    ["gpt-4o-mini-audio-preview-2024-12-17","gpt-4o-mini-audio-preview"],
+    ["gpt-audio-mini-2025-10-06","gpt-audio-mini-2025-12-15","gpt-audio-mini"]
   ],
   "openai-realtime": [
     ["gpt-4o-realtime-preview-2024-12-17","gpt-4o-realtime-preview-2025-06-03","gpt-4o-realtime-preview"],
-    ["gpt-realtime"]
+    ["gpt-realtime-2025-08-28","gpt-realtime"],
+    ["gpt-realtime-1.5"]
   ],
   "openai-realtime-mini": [
-    ["gpt-4o-mini-realtime-preview"],
-    ["gpt-realtime-mini"]
+    ["gpt-4o-mini-realtime-preview-2024-12-17","gpt-4o-mini-realtime-preview"],
+    ["gpt-realtime-mini-2025-10-06","gpt-realtime-mini-2025-12-15","gpt-realtime-mini"]
   ],
   "openai-transcribe": [
     ["whisper-1"],
@@ -167,7 +170,8 @@
     ["pixtral-large-2411"]
   ],
   "deepseek-chat": [
-    ["deepseek-chat"],
+    ["deepseek-chat","deepseek-chat-v3.1"],
+    ["deepseek-v3.1-terminus"],
     ["deepseek-v3.2-exp","deepseek-v3.2"]
   ],
   "deepseek-reasoning": [
@@ -177,7 +181,8 @@
     ["grok-2"],
     ["grok-3","grok-3-beta"],
     ["grok-4-0709","grok-4"],
-    ["grok-4.1"]
+    ["grok-4.1"],
+    ["grok-4.20-beta","grok-4.20-multi-agent-beta"]
   ],
   "xai-grok-mini": [
     ["grok-3-mini","grok-3-mini-beta"]
@@ -198,12 +203,14 @@
     ["qwen2.5-32b-instruct"],
     ["qwen2.5-72b-instruct"],
     ["qwen3-32b"],
-    ["qwen3-max"]
+    ["qwen3-max"],
+    ["qwen3.5-397b-a17b","qwen3.5-plus-02-15"]
   ],
   "qwen-coder": [
     ["qwen-plus"],
     ["qwen2.5-coder-32b-instruct"],
-    ["qwen3-coder-plus"]
+    ["qwen3-coder-plus","qwen3-coder"],
+    ["qwen3-coder-next"]
   ],
   "llama-small": [
     ["llama-3.1-8b-instruct"],
@@ -270,5 +277,71 @@
   "aion": [
     ["aion-1.0"],
     ["aion-2.0"]
+  ],
+  "openai-search": [
+    ["gpt-4o-search-preview-2025-03-11","gpt-4o-search-preview"],
+    ["gpt-5-search-api-2025-10-14","gpt-5-search-api"]
+  ],
+  "xai-grok-fast": [
+    ["grok-4-fast"],
+    ["grok-4.1-fast"]
+  ],
+  "mercury": [
+    ["mercury"],
+    ["mercury-2"]
+  ],
+  "nova-lite": [
+    ["nova-lite-v1"],
+    ["nova-2-lite-v1"]
+  ],
+  "seed": [
+    ["seed-1.6"],
+    ["seed-2.0-lite"]
+  ],
+  "seed-mini": [
+    ["seed-1.6-flash"],
+    ["seed-2.0-mini"]
+  ],
+  "perplexity-sonar-pro": [
+    ["sonar-pro"],
+    ["sonar-pro-search"]
+  ],
+  "glm": [
+    ["glm-4.5"],
+    ["glm-4.6"],
+    ["glm-4.7"],
+    ["glm-5"]
+  ],
+  "glm-air": [
+    ["glm-4.5-air"],
+    ["glm-4.7-flash"]
+  ],
+  "glm-vision": [
+    ["glm-4.5v"],
+    ["glm-4.6v"]
+  ],
+  "hermes-70b": [
+    ["hermes-3-llama-3.1-70b"],
+    ["hermes-4-70b"]
+  ],
+  "hermes-405b": [
+    ["hermes-3-llama-3.1-405b"],
+    ["hermes-4-405b"]
+  ],
+  "olmo-instruct": [
+    ["olmo-2-0325-32b-instruct"],
+    ["olmo-3-7b-instruct"],
+    ["olmo-3.1-32b-instruct"]
+  ],
+  "olmo-think": [
+    ["olmo-3-7b-think"],
+    ["olmo-3-32b-think"],
+    ["olmo-3.1-32b-think"]
+  ],
+  "qwen-vl": [
+    ["qwen-vl-plus"],
+    ["qwen-vl-max"],
+    ["qwen2.5-vl-72b-instruct"],
+    ["qwen3-vl-235b-a22b-instruct"]
   ]
 }
