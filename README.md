@@ -3,9 +3,7 @@
 **Dependabot for LLM model versions.** Scans your codebase for outdated model strings and opens PRs to upgrade them.
 
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-LLM%20Upgrade%20Bot-blue?logo=github)](https://github.com/marketplace/actions/llm-upgrade-bot)
-[![npm](https://img.shields.io/npm/v/llm-upgrade-bot)](https://www.npmjs.com/package/llm-upgrade-bot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 
 Hardcoded `gpt-4`, `claude-3-opus`, or `gemini-2.5-pro`? This tool finds them and upgrades to the latest versions -- across **720+ upgrade entries** from 50 model families spanning OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Moonshot, Qwen, MiniMax, and more.
 
