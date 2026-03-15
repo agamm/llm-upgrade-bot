@@ -207,7 +207,7 @@
     ["qwen3.5-397b-a17b","qwen3.5-plus-02-15"]
   ],
   "qwen-coder": [
-    ["qwen-plus","qwen-plus-2025-07-28"],
+    ["qwen-plus-2025-07-28","qwen-plus"],
     ["qwen2.5-coder-32b-instruct"],
     ["qwen3-coder-plus","qwen3-coder"],
     ["qwen3-coder-next"]
