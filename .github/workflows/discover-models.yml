@@ -74,6 +74,7 @@ jobs:
           add-paths: |
             data/upgrades.json
             data/families.json
+            .claude/skills/classifier.md
           title: 'chore: new LLM models discovered'
           body: |
             Automatically discovered and classified new LLM models.
