@@ -170,6 +170,7 @@
     ["pixtral-large-2411"]
   ],
   "deepseek-chat": [
+    ["deepseek-chat-v3-0324"],
     ["deepseek-chat","deepseek-chat-v3.1"],
     ["deepseek-v3.1-terminus"],
     ["deepseek-v3.2-exp","deepseek-v3.2"]
@@ -207,7 +208,7 @@
     ["qwen3.5-397b-a17b","qwen3.5-plus-02-15"]
   ],
   "qwen-coder": [
-    ["qwen-plus"],
+    ["qwen-plus-2025-07-28","qwen-plus"],
     ["qwen2.5-coder-32b-instruct"],
     ["qwen3-coder-plus","qwen3-coder"],
     ["qwen3-coder-next"]
@@ -343,5 +344,9 @@
     ["qwen-vl-max"],
     ["qwen2.5-vl-72b-instruct"],
     ["qwen3-vl-235b-a22b-instruct"]
+  ],
+  "openai-deep-research": [
+    ["o3-deep-research-2025-06-26","o3-deep-research"],
+    ["o4-mini-deep-research-2025-06-26","o4-mini-deep-research"]
   ]
 }
