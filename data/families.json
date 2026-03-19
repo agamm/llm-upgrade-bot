@@ -20,11 +20,13 @@
     ["gpt-3.5-turbo-16k-0613","gpt-3.5-turbo-16k"],
     ["gpt-4o-mini-2024-07-18","gpt-4o-mini"],
     ["gpt-4.1-mini-2025-04-14","gpt-4.1-mini"],
-    ["gpt-5-mini-2025-08-07","gpt-5-mini"]
+    ["gpt-5-mini-2025-08-07","gpt-5-mini"],
+    ["gpt-5.4-mini-2026-03-17","gpt-5.4-mini"]
   ],
   "openai-nano": [
     ["gpt-4.1-nano-2025-04-14","gpt-4.1-nano"],
-    ["gpt-5-nano-2025-08-07","gpt-5-nano"]
+    ["gpt-5-nano-2025-08-07","gpt-5-nano"],
+    ["gpt-5.4-nano-2026-03-17","gpt-5.4-nano"]
   ],
   "openai-codex": [
     ["gpt-5-codex"],
@@ -149,7 +151,8 @@
     ["mistral-small-2402"],
     ["mistral-small-24b-instruct-2501"],
     ["mistral-small-3.1-24b-instruct"],
-    ["mistral-small-3.2-24b-instruct"]
+    ["mistral-small-3.2-24b-instruct"],
+    ["mistral-small-2603"]
   ],
   "mistral-medium": [
     ["mistral-medium-2312"],
@@ -195,7 +198,8 @@
     ["MiniMax-Text-01"],
     ["minimax-m1"],
     ["MiniMax-M2","minimax-m2","minimax-m2.1","MiniMax-M2.1"],
-    ["minimax-m2.5","MiniMax-M2.5"]
+    ["minimax-m2.5","MiniMax-M2.5"],
+    ["minimax-m2.7"]
   ],
   "qwen-flagship": [
     ["qwen-turbo"],
@@ -207,7 +211,7 @@
     ["qwen3.5-397b-a17b","qwen3.5-plus-02-15"]
   ],
   "qwen-coder": [
-    ["qwen-plus"],
+    ["qwen-plus-2025-07-28","qwen-plus"],
     ["qwen2.5-coder-32b-instruct"],
     ["qwen3-coder-plus","qwen3-coder"],
     ["qwen3-coder-next"]
@@ -343,5 +347,14 @@
     ["qwen-vl-max"],
     ["qwen2.5-vl-72b-instruct"],
     ["qwen3-vl-235b-a22b-instruct"]
+  ],
+  "devstral": [
+    ["devstral-medium"],
+    ["devstral-2512"]
+  ],
+  "together-glm": [
+    ["GLM-4.6"],
+    ["GLM-4.7"],
+    ["GLM-5"]
   ]
 }
