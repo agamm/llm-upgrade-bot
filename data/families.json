@@ -16,7 +16,7 @@
   ],
   "openai-mini": [
     ["gpt-3.5-turbo-0301","gpt-3.5-turbo-0613","gpt-3.5-turbo-1106","gpt-3.5-turbo-0125","gpt-3.5-turbo"],
-    ["gpt-3.5-turbo-instruct"],
+    ["gpt-3.5-turbo-instruct-0914","gpt-3.5-turbo-instruct"],
     ["gpt-3.5-turbo-16k-0613","gpt-3.5-turbo-16k"],
     ["gpt-4o-mini-2024-07-18","gpt-4o-mini"],
     ["gpt-4.1-mini-2025-04-14","gpt-4.1-mini"],
@@ -110,7 +110,7 @@
   ],
   "anthropic-haiku": [
     ["claude-instant-1.2"],
-    ["claude-3-haiku-20240307"],
+    ["claude-3-haiku-20240307","claude-3-haiku"],
     ["claude-3.5-haiku-20241022","claude-3.5-haiku"],
     ["claude-haiku-4.5-20251001","claude-haiku-4.5"]
   ],
@@ -147,7 +147,7 @@
   "mistral-small": [
     ["mistral-tiny"],
     ["open-mistral-7b"],
-    ["open-mistral-nemo"],
+    ["open-mistral-nemo","mistral-nemo"],
     ["mistral-small-2402"],
     ["mistral-small-24b-instruct-2501"],
     ["mistral-small-3.1-24b-instruct"],
@@ -162,17 +162,18 @@
   "mistral-large": [
     ["open-mixtral-8x7b"],
     ["open-mixtral-8x22b"],
-    ["mistral-large-2402","mistral-large-2407","mistral-large-2411","mistral-large-2512"]
+    ["mistral-large-2402","mistral-large-2407","mistral-large-2411","mistral-large-2512","mistral-large"]
   ],
   "mistral-codestral": [
     ["codestral-2405"],
     ["codestral-2508"]
   ],
   "mistral-pixtral": [
-    ["pixtral-12b-2409"],
+    ["pixtral-12b-2409","pixtral-12b"],
     ["pixtral-large-2411"]
   ],
   "deepseek-chat": [
+    ["deepseek-chat-v3-0324"],
     ["deepseek-chat","deepseek-chat-v3.1"],
     ["deepseek-v3.1-terminus"],
     ["deepseek-v3.2-exp","deepseek-v3.2"]
@@ -217,12 +218,14 @@
     ["qwen3-coder-next"]
   ],
   "llama-small": [
+    ["llama-3-8b-instruct"],
     ["llama-3.1-8b-instruct"],
     ["llama-3.2-3b-instruct"],
     ["llama-3.2-11b-vision-instruct"],
     ["llama-4-scout-17b-16e-instruct","llama-4-scout"]
   ],
   "llama-large": [
+    ["llama-3-70b-instruct"],
     ["llama-3.1-70b-instruct","llama-3.3-70b-instruct"],
     ["llama-3.1-405b-instruct"],
     ["llama-3.2-90b-vision-instruct"],
