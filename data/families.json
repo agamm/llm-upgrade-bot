@@ -120,7 +120,7 @@
     ["gemini-1.5-pro"],
     ["gemini-1.5-pro-002"],
     ["gemini-2.5-pro-preview-05-06","gemini-2.5-pro-preview","gemini-2.5-pro"],
-    ["gemini-3-pro-preview","gemini-3.1-pro-preview"]
+    ["gemini-3-pro-preview","gemini-3.1-pro-preview","gemini-3.1-pro-preview-customtools"]
   ],
   "google-flash": [
     ["gemini-pro-vision"],
@@ -185,18 +185,18 @@
     ["grok-3","grok-3-beta"],
     ["grok-4-0709","grok-4"],
     ["grok-4.1"],
-    ["grok-4.20-beta","grok-4.20-multi-agent-beta"]
+    ["grok-4.20-beta","grok-4.20-multi-agent-beta","grok-4.20","grok-4.20-multi-agent"]
   ],
   "xai-grok-mini": [
     ["grok-3-mini","grok-3-mini-beta"]
   ],
   "kimi": [
     ["kimi-k2-instruct-0905","kimi-k2-0905","kimi-k2-instruct","kimi-k2"],
-    ["kimi-k2.5"]
+    ["kimi-k2.5","Kimi-K2.5"]
   ],
   "minimax": [
     ["MiniMax-Text-01"],
-    ["minimax-m1"],
+    ["minimax-m1","MiniMax-M1-40k","MiniMax-M1-80k"],
     ["MiniMax-M2","minimax-m2","minimax-m2.1","MiniMax-M2.1"],
     ["minimax-m2.5","MiniMax-M2.5"],
     ["minimax-m2.7"]
@@ -208,7 +208,8 @@
     ["qwen2.5-72b-instruct"],
     ["qwen3-32b"],
     ["qwen3-235b-a22b-2507","qwen3-235b-a22b","qwen3-max"],
-    ["qwen3.5-397b-a17b","qwen3.5-plus-02-15"]
+    ["qwen3.5-397b-a17b","qwen3.5-plus-02-15"],
+    ["qwen3.6-plus"]
   ],
   "qwen-coder": [
     ["qwen-plus-2025-07-28","qwen-plus"],
@@ -314,7 +315,8 @@
     ["glm-4.5"],
     ["glm-4.6"],
     ["glm-4.7"],
-    ["glm-5"]
+    ["glm-5"],
+    ["glm-5.1"]
   ],
   "glm-air": [
     ["glm-4.5-air"],
@@ -355,7 +357,8 @@
   "together-glm": [
     ["GLM-4.6"],
     ["GLM-4.7"],
-    ["GLM-5"]
+    ["GLM-5"],
+    ["GLM-5.1"]
   ],
   "openai-deep-research": [
     ["o3-deep-research-2025-06-26","o3-deep-research"],
