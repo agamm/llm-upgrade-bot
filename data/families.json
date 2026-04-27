@@ -12,7 +12,8 @@
     ["gpt-5.1-2025-11-13","gpt-5.1","gpt-5.1-chat"],
     ["gpt-5.2-2025-12-11","gpt-5.2","gpt-5.2-chat"],
     ["gpt-5.3","gpt-5.3-chat"],
-    ["gpt-5.4-2026-03-05","gpt-5.4"]
+    ["gpt-5.4-2026-03-05","gpt-5.4"],
+    ["gpt-5.5-2026-04-23","gpt-5.5"]
   ],
   "openai-mini": [
     ["gpt-3.5-turbo-0301","gpt-3.5-turbo-0613","gpt-3.5-turbo-1106","gpt-3.5-turbo-0125","gpt-3.5-turbo"],
@@ -37,7 +38,8 @@
   "openai-pro": [
     ["gpt-5-pro-2025-10-06","gpt-5-pro"],
     ["gpt-5.2-pro-2025-12-11","gpt-5.2-pro"],
-    ["gpt-5.4-pro-2026-03-05","gpt-5.4-pro"]
+    ["gpt-5.4-pro-2026-03-05","gpt-5.4-pro"],
+    ["gpt-5.5-pro-2026-04-23","gpt-5.5-pro"]
   ],
   "openai-reasoning": [
     ["o1-preview-2024-09-12","o1-preview"],
@@ -98,7 +100,8 @@
     ["claude-opus-4-20250514","claude-opus-4.0","claude-opus-4"],
     ["claude-opus-4-1-20250805","claude-opus-4.1"],
     ["claude-opus-4-5-20251101","claude-opus-4.5"],
-    ["claude-opus-4.6"]
+    ["claude-opus-4.6"],
+    ["claude-opus-4-7","claude-opus-4.7"]
   ],
   "anthropic-sonnet": [
     ["claude-3-sonnet-20240229"],
@@ -173,9 +176,10 @@
     ["pixtral-large-2411"]
   ],
   "deepseek-chat": [
-    ["deepseek-chat","deepseek-chat-v3.1"],
+    ["deepseek-chat-v3-0324","deepseek-chat","deepseek-chat-v3.1"],
     ["deepseek-v3.1-terminus"],
-    ["deepseek-v3.2-exp","deepseek-v3.2"]
+    ["deepseek-v3.2-exp","deepseek-v3.2"],
+    ["deepseek-v4-pro","DeepSeek-V4-Pro"]
   ],
   "deepseek-reasoning": [
     ["deepseek-r1-0528","deepseek-reasoner","deepseek-r1"]
@@ -192,14 +196,15 @@
   ],
   "kimi": [
     ["kimi-k2-instruct-0905","kimi-k2-0905","kimi-k2-instruct","kimi-k2"],
-    ["kimi-k2.5","Kimi-K2.5"]
+    ["kimi-k2.5","Kimi-K2.5"],
+    ["kimi-k2.6","Kimi-K2.6"]
   ],
   "minimax": [
     ["MiniMax-Text-01"],
     ["minimax-m1","MiniMax-M1-40k","MiniMax-M1-80k"],
     ["MiniMax-M2","minimax-m2","minimax-m2.1","MiniMax-M2.1"],
     ["minimax-m2.5","MiniMax-M2.5"],
-    ["minimax-m2.7"]
+    ["minimax-m2.7","MiniMax-M2.7"]
   ],
   "qwen-flagship": [
     ["qwen-turbo"],
@@ -208,7 +213,7 @@
     ["qwen2.5-72b-instruct"],
     ["qwen3-32b"],
     ["qwen3-235b-a22b-2507","qwen3-235b-a22b","qwen3-max"],
-    ["qwen3.5-397b-a17b","qwen3.5-plus-02-15"],
+    ["qwen3.5-397b-a17b","qwen3.5-plus-02-15","qwen3.5-plus-20260420"],
     ["qwen3.6-plus"]
   ],
   "qwen-coder": [
@@ -366,6 +371,7 @@
   ],
   "gemma-27b": [
     ["gemma-2-27b-it"],
-    ["gemma-3-27b-it"]
+    ["gemma-3-27b-it"],
+    ["gemma-4-31b-it","gemma-4-31B-it"]
   ]
 }
