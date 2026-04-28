@@ -17,6 +17,7 @@ import {
   fetchAllProviderModels,
   filterChatModels,
   diffModels,
+  isTransientError,
   PROVIDER_CONFIGS,
 } from '../src/core/model-discovery.js'
 import { loadFamilies, allModelsInFamilies } from '../src/core/families.js'
@@ -67,10 +68,13 @@ async function main() {
   console.log(`Fetching models from ${String(PROVIDER_CONFIGS.length)} providers...`)
   const { models, skipped } = await fetchAllProviderModels()
 
-  const requiredFailures = skipped.filter((s) => !optional.has(s.split(':')[0] ?? ''))
-  for (const s of skipped) console.warn(`  Skipped: ${s}`)
-  if (requiredFailures.length > 0) {
-    console.error(`${String(requiredFailures.length)} required provider(s) failed. Aborting.`)
+  for (const s of skipped) console.warn(`  Skipped: ${s.provider}: ${s.error}`)
+  const hardFailures = skipped.filter(
+    (s) => !optional.has(s.provider) && !isTransientError(s.error),
+  )
+  if (hardFailures.length > 0) {
+    const detail = hardFailures.map((s) => `${s.provider} (${s.error})`).join(', ')
+    console.error(`${String(hardFailures.length)} required provider(s) failed: ${detail}. Aborting.`)
     process.exit(1)
   }
 

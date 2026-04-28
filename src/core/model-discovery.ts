@@ -112,13 +112,13 @@ export async function fetchProviderModels(
     response = await fetch(url, { headers, signal: AbortSignal.timeout(30_000) })
   } catch (err) {
     const raw = err instanceof Error ? err.message : 'fetch failed'
-    return { ok: false, error: `${config.name}: ${sanitizeError(raw, key)}` }
+    return { ok: false, error: sanitizeError(raw, key) }
   }
 
   if (!response.ok) {
     return {
       ok: false,
-      error: `${config.name}: HTTP ${String(response.status)}`,
+      error: `HTTP ${String(response.status)}`,
     }
   }
 
@@ -126,17 +126,22 @@ export async function fetchProviderModels(
   try {
     body = await response.json()
   } catch {
-    return { ok: false, error: `${config.name}: invalid JSON response` }
+    return { ok: false, error: 'invalid JSON response' }
   }
 
   return { ok: true, data: config.extractIds(body) }
 }
 
+export interface ProviderSkip {
+  provider: string
+  error: string
+}
+
 export async function fetchAllProviderModels(
   configs: ProviderConfig[] = PROVIDER_CONFIGS,
-): Promise<{ models: Record<string, Set<string>>; skipped: string[] }> {
+): Promise<{ models: Record<string, Set<string>>; skipped: ProviderSkip[] }> {
   const models: Record<string, Set<string>> = {}
-  const skipped: string[] = []
+  const skipped: ProviderSkip[] = []
 
   const results = await Promise.all(
     configs.map(async (c) => ({ config: c, result: await fetchProviderModels(c) })),
@@ -146,11 +151,18 @@ export async function fetchAllProviderModels(
     if (result.ok) {
       models[config.name] = new Set(result.data)
     } else {
-      skipped.push(`${config.name}: ${result.error}`)
+      skipped.push({ provider: config.name, error: result.error })
     }
   }
 
   return { models, skipped }
+}
+
+const TRANSIENT_HTTP = /^HTTP (5\d\d|408|429)\b/
+const TRANSIENT_NETWORK = /\b(fetch failed|timeout|aborted|ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up)\b/i
+
+export function isTransientError(error: string): boolean {
+  return TRANSIENT_HTTP.test(error) || TRANSIENT_NETWORK.test(error)
 }
 
 export function filterChatModels(ids: string[]): string[] {
