@@ -80,6 +80,17 @@ describe('data/upgrades.json schema validation', () => {
     expect(keys.some((k) => k === 'llama-3.1-8b-instant')).toBe(true)
   })
 
+  it('contains bare Claude 3 aliases (un-timestamped forms in widespread use)', async () => {
+    const map = await loadRealMap()
+    for (const id of ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku']) {
+      expect(map[id], `missing upgrade entry for ${id}`).toBeDefined()
+      expect(
+        map[id]?.major,
+        `${id}: should have a major upgrade target`,
+      ).not.toBeNull()
+    }
+  })
+
   it('passes variant validation', async () => {
     const map = await loadRealMap()
     const result = validateUpgradeMap(map)
