@@ -98,9 +98,13 @@ declare function validateUpgradeMap(map: UpgradeMap, rules?: VariantRule[]): Res
 
 declare const PROVIDER_CONFIGS: ProviderConfig[];
 declare function fetchProviderModels(config: ProviderConfig): Promise<Result<string[]>>;
+interface ProviderSkip {
+    provider: string;
+    error: string;
+}
 declare function fetchAllProviderModels(configs?: ProviderConfig[]): Promise<{
     models: Record<string, Set<string>>;
-    skipped: string[];
+    skipped: ProviderSkip[];
 }>;
 declare function filterChatModels(ids: string[]): string[];
 declare function diffModels(knownKeys: Set<string>, discovered: string[]): string[];

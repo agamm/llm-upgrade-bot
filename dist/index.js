@@ -628,19 +628,19 @@ async function fetchProviderModels(config) {
     response = await fetch(url, { headers, signal: AbortSignal.timeout(3e4) });
   } catch (err) {
     const raw = err instanceof Error ? err.message : "fetch failed";
-    return { ok: false, error: `${config.name}: ${sanitizeError(raw, key)}` };
+    return { ok: false, error: sanitizeError(raw, key) };
   }
   if (!response.ok) {
     return {
       ok: false,
-      error: `${config.name}: HTTP ${String(response.status)}`
+      error: `HTTP ${String(response.status)}`
     };
   }
   let body;
   try {
     body = await response.json();
   } catch {
-    return { ok: false, error: `${config.name}: invalid JSON response` };
+    return { ok: false, error: "invalid JSON response" };
   }
   return { ok: true, data: config.extractIds(body) };
 }
@@ -654,7 +654,7 @@ async function fetchAllProviderModels(configs = PROVIDER_CONFIGS) {
     if (result.ok) {
       models[config.name] = new Set(result.data);
     } else {
-      skipped.push(`${config.name}: ${result.error}`);
+      skipped.push({ provider: config.name, error: result.error });
     }
   }
   return { models, skipped };
