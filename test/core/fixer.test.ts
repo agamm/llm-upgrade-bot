@@ -519,6 +519,24 @@ describe('scan → fix → rescan round-trip', () => {
     expect(reResults).toEqual([])
   })
 
+  it('applies bare (unquoted) markdown matches', async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'roundtrip-bare-'))
+    const filePath = join(tmpDir, 'README.md')
+    await writeFile(filePath, '  -> major: gpt-4\n')
+
+    const content = await readFile(filePath, 'utf-8')
+    const results = scanFile(filePath, content, map)
+    expect(results).toHaveLength(1)
+    expect(results[0]?.matchedText).toBe('gpt-4')
+
+    const edits = computeEdits(results)
+    const applyResult = await applyFixes(edits)
+    expect(applyResult.applied).toBe(1)
+
+    const updated = await readFile(filePath, 'utf-8')
+    expect(updated).toBe('  -> major: gpt-4.1\n')
+  })
+
   it('multi-file round-trip with mixed native and prefixed models', async () => {
     tmpDir = await mkdtemp(join(tmpdir(), 'roundtrip-multi-'))
     const file1 = join(tmpDir, 'a.py')

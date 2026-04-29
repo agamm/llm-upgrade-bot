@@ -92,14 +92,25 @@ function applyEditsToContent(
     if (line === undefined) continue
 
     const col = edit.column
-    const before = line.slice(0, col)
+
+    // Bare match (markdown): oldText starts at column directly.
+    if (line.slice(col).startsWith(edit.oldText)) {
+      lines[lineIndex] =
+        line.slice(0, col) + edit.newText + line.slice(col + edit.oldText.length)
+      appliedCount++
+      continue
+    }
+
+    // Quoted/backtick match: column points at the opening delimiter,
+    // oldText starts at column+1.
     const quoteChar = line[col]
     const afterQuote = line.slice(col + 1)
-
-    // The oldText should appear right after the opening quote
     if (quoteChar && afterQuote.startsWith(edit.oldText)) {
       lines[lineIndex] =
-        before + quoteChar + edit.newText + afterQuote.slice(edit.oldText.length)
+        line.slice(0, col) +
+        quoteChar +
+        edit.newText +
+        afterQuote.slice(edit.oldText.length)
       appliedCount++
     }
   }
