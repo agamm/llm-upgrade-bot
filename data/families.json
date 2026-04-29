@@ -17,7 +17,7 @@
   ],
   "openai-mini": [
     ["gpt-3.5-turbo-0301","gpt-3.5-turbo-0613","gpt-3.5-turbo-1106","gpt-3.5-turbo-0125","gpt-3.5-turbo"],
-    ["gpt-3.5-turbo-instruct"],
+    ["gpt-3.5-turbo-instruct-0914","gpt-3.5-turbo-instruct"],
     ["gpt-3.5-turbo-16k-0613","gpt-3.5-turbo-16k"],
     ["gpt-4o-mini-2024-07-18","gpt-4o-mini"],
     ["gpt-4.1-mini-2025-04-14","gpt-4.1-mini"],
@@ -150,7 +150,7 @@
   "mistral-small": [
     ["mistral-tiny"],
     ["open-mistral-7b"],
-    ["open-mistral-nemo"],
+    ["open-mistral-nemo","mistral-nemo"],
     ["mistral-small-2402"],
     ["mistral-small-24b-instruct-2501"],
     ["mistral-small-3.1-24b-instruct"],
@@ -165,7 +165,7 @@
   "mistral-large": [
     ["open-mixtral-8x7b"],
     ["open-mixtral-8x22b"],
-    ["mistral-large-2402","mistral-large-2407","mistral-large-2411","mistral-large-2512"]
+    ["mistral-large-2402","mistral-large-2407","mistral-large-2411","mistral-large-2512","mistral-large"]
   ],
   "mistral-codestral": [
     ["codestral-2405"],
@@ -224,12 +224,14 @@
     ["qwen3-coder-next"]
   ],
   "llama-small": [
+    ["llama-3-8b-instruct"],
     ["llama-3.1-8b-instruct"],
     ["llama-3.2-3b-instruct"],
     ["llama-3.2-11b-vision-instruct"],
     ["llama-4-scout-17b-16e-instruct","llama-4-scout"]
   ],
   "llama-large": [
+    ["llama-3-70b-instruct"],
     ["llama-3.1-70b-instruct","llama-3.3-70b-instruct"],
     ["llama-3.1-405b-instruct"],
     ["llama-3.2-90b-vision-instruct"],
@@ -292,6 +294,9 @@
   "openai-search": [
     ["gpt-4o-search-preview-2025-03-11","gpt-4o-search-preview"],
     ["gpt-5-search-api-2025-10-14","gpt-5-search-api"]
+  ],
+  "openai-search-mini": [
+    ["gpt-4o-mini-search-preview-2025-03-11","gpt-4o-mini-search-preview"]
   ],
   "xai-grok-fast": [
     ["grok-4-fast"],
