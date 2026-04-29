@@ -223,6 +223,10 @@
     ["qwen3-coder-30b-a3b-instruct","qwen3-coder-plus","qwen3-coder"],
     ["qwen3-coder-next"]
   ],
+  "qwen-flash": [
+    ["qwen3.5-35b-a3b","qwen3.5-flash-02-23"],
+    ["qwen3.6-35b-a3b","qwen3.6-flash"]
+  ],
   "llama-small": [
     ["llama-3-8b-instruct"],
     ["llama-3.1-8b-instruct"],
