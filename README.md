@@ -11,10 +11,10 @@ Hardcoded `gpt-4`, `claude-3-opus`, or `gemini-2.5-pro`? This tool finds them an
 $ llm-upgrade-bot ./src
 
   src/config.yaml:3  "claude-3-opus"
-    -> major: claude-opus-4.6
+    -> major: claude-opus-4.7
 
   src/lib/router.ts:3  "gpt-3.5-turbo"
-    -> major: gpt-5-mini
+    -> major: gpt-5.4-mini
 
   Found 2 upgradable models in 2 files
 ```
