@@ -160,7 +160,8 @@
   "mistral-medium": [
     ["mistral-medium-2312"],
     ["mistral-medium-3"],
-    ["mistral-medium-3.1"]
+    ["mistral-medium-3.1"],
+    ["mistral-medium-3.5"]
   ],
   "mistral-large": [
     ["open-mixtral-8x7b"],
@@ -189,7 +190,8 @@
     ["grok-3","grok-3-beta"],
     ["grok-4-0709","grok-4"],
     ["grok-4.1"],
-    ["grok-4.20-beta","grok-4.20-multi-agent-beta","grok-4.20","grok-4.20-multi-agent"]
+    ["grok-4.20-beta","grok-4.20-multi-agent-beta","grok-4.20","grok-4.20-multi-agent"],
+    ["grok-4.3"]
   ],
   "xai-grok-mini": [
     ["grok-3-mini","grok-3-mini-beta"]
@@ -221,7 +223,7 @@
     ["qwen-plus-2025-07-28","qwen-plus"],
     ["qwen2.5-coder-32b-instruct"],
     ["qwen3-coder-30b-a3b-instruct","qwen3-coder-plus","qwen3-coder"],
-    ["qwen3-coder-next"]
+    ["qwen3-next-80b-a3b-instruct","qwen3-coder-next"]
   ],
   "qwen-flash": [
     ["qwen3.5-35b-a3b","qwen3.5-flash-02-23"],
@@ -270,7 +272,9 @@
     ["Qwen/Qwen2.5-72B-Instruct"],
     ["Qwen/Qwen2.5-72B-Instruct-Turbo"],
     ["Qwen/Qwen2.5-Coder-32B-Instruct"],
-    ["Qwen/Qwen3-235B-A22B-fp8"]
+    ["Qwen/Qwen3-235B-A22B-fp8"],
+    ["Qwen3.5-397B-A17B"],
+    ["Qwen3.6-Plus"]
   ],
   "together-deepseek": [
     ["deepseek-ai/DeepSeek-V3-0324"],
@@ -335,7 +339,8 @@
   ],
   "glm-air": [
     ["glm-4.5-air"],
-    ["glm-4.7-flash"]
+    ["glm-4.7-flash"],
+    ["glm-5-turbo"]
   ],
   "glm-vision": [
     ["glm-4.5v"],
@@ -383,5 +388,9 @@
     ["gemma-2-27b-it"],
     ["gemma-3-27b-it"],
     ["gemma-4-31b-it","gemma-4-31B-it"]
+  ],
+  "together-qwen-coder": [
+    ["Qwen3-Coder-480B-A35B-Instruct-FP8"],
+    ["Qwen3-Coder-Next-FP8","Qwen3-Next-80B-A3B-Instruct"]
   ]
 }
