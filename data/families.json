@@ -198,7 +198,7 @@
     ["grok-3","grok-3-beta"],
     ["grok-4-0709","grok-4"],
     ["grok-4.1"],
-    ["grok-4.20-beta","grok-4.20-multi-agent-beta","grok-4.20","grok-4.20-multi-agent"],
+    ["grok-4.20-0309-non-reasoning","grok-4.20-0309-reasoning","grok-4.20-multi-agent-0309","grok-4.20-beta","grok-4.20-multi-agent-beta","grok-4.20","grok-4.20-multi-agent"],
     ["grok-4.3"]
   ],
   "xai-grok-mini": [
@@ -237,6 +237,7 @@
     ["qwen3-next-80b-a3b-instruct","qwen3-coder-next"]
   ],
   "qwen-flash": [
+    ["qwen3-30b-a3b-instruct-2507","qwen3-30b-a3b"],
     ["qwen3.5-35b-a3b","qwen3.5-flash-02-23"],
     ["qwen3.6-35b-a3b","qwen3.6-flash"]
   ],
@@ -412,5 +413,33 @@
   "cohere-command-flagship": [
     ["command-r-plus-08-2024"],
     ["command-a"]
+  ],
+  "step-flash": [
+    ["step-3.5-flash"],
+    ["step-3.7-flash"]
+  ],
+  "qwen-small": [
+    ["qwen3-8b"],
+    ["qwen3.5-9b"]
+  ],
+  "qwen-medium": [
+    ["qwen3-14b"],
+    ["qwen3.5-27b"]
+  ],
+  "ministral-3b": [
+    ["ministral-3b-2410"],
+    ["ministral-3b-2512"]
+  ],
+  "ministral-8b": [
+    ["ministral-8b-2410"],
+    ["ministral-8b-2512"]
+  ],
+  "gemma-12b": [
+    ["gemma-2-9b-it"],
+    ["gemma-3-12b-it"]
+  ],
+  "gemma-edge-4b": [
+    ["gemma-3n-e4b-it"],
+    ["gemma-4-E4B-it"]
   ]
 }
