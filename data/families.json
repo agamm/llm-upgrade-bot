@@ -215,7 +215,7 @@
     ["MiniMax-M2","minimax-m2","minimax-m2.1","MiniMax-M2.1"],
     ["minimax-m2.5","MiniMax-M2.5"],
     ["minimax-m2.7","MiniMax-M2.7"],
-    ["minimax-m3"]
+    ["minimax-m3","MiniMax-M3"]
   ],
   "qwen-flagship": [
     ["qwen-turbo"],
@@ -348,7 +348,8 @@
     ["glm-4.6"],
     ["glm-4.7"],
     ["glm-5"],
-    ["glm-5.1"]
+    ["glm-5.1"],
+    ["glm-5.2"]
   ],
   "glm-air": [
     ["glm-4.5-air"],
@@ -391,7 +392,8 @@
     ["GLM-4.6"],
     ["GLM-4.7"],
     ["GLM-5"],
-    ["GLM-5.1"]
+    ["GLM-5.1"],
+    ["GLM-5.2"]
   ],
   "openai-deep-research": [
     ["o3-deep-research-2025-06-26","o3-deep-research"],
@@ -424,7 +426,8 @@
   ],
   "qwen-medium": [
     ["qwen3-14b"],
-    ["qwen3.5-27b"]
+    ["qwen3.5-27b"],
+    ["qwen3.6-27b"]
   ],
   "ministral-3b": [
     ["ministral-3b-2410"],
