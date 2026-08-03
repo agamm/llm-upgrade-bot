@@ -13,7 +13,8 @@
     ["gpt-5.2-2025-12-11","gpt-5.2","gpt-5.2-chat"],
     ["gpt-5.3","gpt-5.3-chat"],
     ["gpt-5.4-2026-03-05","gpt-5.4"],
-    ["gpt-5.5-2026-04-23","gpt-5.5"]
+    ["gpt-5.5-2026-04-23","gpt-5.5"],
+    ["gpt-5.6-sol"]
   ],
   "openai-mini": [
     ["gpt-3.5-turbo-0301","gpt-3.5-turbo-0613","gpt-3.5-turbo-1106","gpt-3.5-turbo-0125","gpt-3.5-turbo"],
@@ -22,12 +23,14 @@
     ["gpt-4o-mini-2024-07-18","gpt-4o-mini"],
     ["gpt-4.1-mini-2025-04-14","gpt-4.1-mini"],
     ["gpt-5-mini-2025-08-07","gpt-5-mini"],
-    ["gpt-5.4-mini-2026-03-17","gpt-5.4-mini"]
+    ["gpt-5.4-mini-2026-03-17","gpt-5.4-mini"],
+    ["gpt-5.6-terra"]
   ],
   "openai-nano": [
     ["gpt-4.1-nano-2025-04-14","gpt-4.1-nano"],
     ["gpt-5-nano-2025-08-07","gpt-5-nano"],
-    ["gpt-5.4-nano-2026-03-17","gpt-5.4-nano"]
+    ["gpt-5.4-nano-2026-03-17","gpt-5.4-nano"],
+    ["gpt-5.6-luna"]
   ],
   "openai-codex": [
     ["gpt-5-codex"],
@@ -39,7 +42,8 @@
     ["gpt-5-pro-2025-10-06","gpt-5-pro"],
     ["gpt-5.2-pro-2025-12-11","gpt-5.2-pro"],
     ["gpt-5.4-pro-2026-03-05","gpt-5.4-pro"],
-    ["gpt-5.5-pro-2026-04-23","gpt-5.5-pro"]
+    ["gpt-5.5-pro-2026-04-23","gpt-5.5-pro"],
+    ["gpt-5.6-sol-pro"]
   ],
   "openai-reasoning": [
     ["o1-preview-2024-09-12","o1-preview"],
@@ -68,11 +72,13 @@
     ["gpt-4o-realtime-preview-2024-12-17","gpt-4o-realtime-preview-2025-06-03","gpt-4o-realtime-preview"],
     ["gpt-realtime-2025-08-28","gpt-realtime"],
     ["gpt-realtime-1.5"],
-    ["gpt-realtime-2"]
+    ["gpt-realtime-2"],
+    ["gpt-realtime-2.1"]
   ],
   "openai-realtime-mini": [
     ["gpt-4o-mini-realtime-preview-2024-12-17","gpt-4o-mini-realtime-preview"],
-    ["gpt-realtime-mini-2025-10-06","gpt-realtime-mini-2025-12-15","gpt-realtime-mini"]
+    ["gpt-realtime-mini-2025-10-06","gpt-realtime-mini-2025-12-15","gpt-realtime-mini"],
+    ["gpt-realtime-2.1-mini"]
   ],
   "openai-transcribe": [
     ["whisper-1"],
@@ -103,7 +109,8 @@
     ["claude-opus-4-5-20251101","claude-opus-4.5"],
     ["claude-opus-4.6"],
     ["claude-opus-4-7","claude-opus-4.7"],
-    ["claude-opus-4-8","claude-opus-4.8"]
+    ["claude-opus-4-8","claude-opus-4.8"],
+    ["claude-opus-5"]
   ],
   "anthropic-sonnet": [
     ["claude-3-sonnet-20240229","claude-3-sonnet"],
@@ -111,7 +118,8 @@
     ["claude-3.7-sonnet-20250219","claude-3.7-sonnet"],
     ["claude-sonnet-4-20250514","claude-sonnet-4.0","claude-sonnet-4"],
     ["claude-sonnet-4-5-20250929","claude-sonnet-4.5"],
-    ["claude-sonnet-4.6"]
+    ["claude-sonnet-4.6"],
+    ["claude-sonnet-5"]
   ],
   "anthropic-haiku": [
     ["claude-instant-1.2"],
@@ -122,7 +130,8 @@
   "anthropic-opus-fast": [
     ["claude-opus-4.6-fast"],
     ["claude-opus-4.7-fast"],
-    ["claude-opus-4.8-fast"]
+    ["claude-opus-4.8-fast"],
+    ["claude-opus-5-fast"]
   ],
   "google-pro": [
     ["gemini-pro"],
@@ -139,13 +148,15 @@
     ["gemini-2.0-flash-001","gemini-2.0-flash"],
     ["gemini-2.5-flash"],
     ["gemini-3-flash-preview"],
-    ["gemini-3.5-flash"]
+    ["gemini-3.5-flash"],
+    ["gemini-3.6-flash"]
   ],
   "google-flash-lite": [
     ["gemini-1.5-flash-8b"],
     ["gemini-2.0-flash-lite-001","gemini-2.0-flash-lite"],
     ["gemini-2.5-flash-lite-preview-09-2025","gemini-2.5-flash-lite"],
-    ["gemini-3.1-flash-lite-preview","gemini-3.1-flash-lite"]
+    ["gemini-3.1-flash-lite-preview","gemini-3.1-flash-lite"],
+    ["gemini-3.5-flash-lite"]
   ],
   "google-embedding": [
     ["text-embedding-004","text-embedding-005"],
@@ -199,7 +210,8 @@
     ["grok-4-0709","grok-4"],
     ["grok-4.1"],
     ["grok-4.20-0309-non-reasoning","grok-4.20-0309-reasoning","grok-4.20-multi-agent-0309","grok-4.20-beta","grok-4.20-multi-agent-beta","grok-4.20","grok-4.20-multi-agent"],
-    ["grok-4.3"]
+    ["grok-4.3"],
+    ["grok-4.5"]
   ],
   "xai-grok-mini": [
     ["grok-3-mini","grok-3-mini-beta"]
@@ -207,7 +219,8 @@
   "kimi": [
     ["kimi-k2-instruct-0905","kimi-k2-0905","kimi-k2-instruct","kimi-k2"],
     ["kimi-k2.5","Kimi-K2.5"],
-    ["kimi-k2.6","Kimi-K2.6"]
+    ["kimi-k2.6","Kimi-K2.6"],
+    ["kimi-k3","Kimi-K3"]
   ],
   "minimax": [
     ["MiniMax-Text-01","minimax-01"],
@@ -233,13 +246,14 @@
   "qwen-coder": [
     ["qwen-plus-2025-07-28","qwen-plus"],
     ["qwen2.5-coder-32b-instruct"],
-    ["qwen3-coder-30b-a3b-instruct","qwen3-coder-plus","qwen3-coder"],
+    ["qwen3-coder-30b-a3b-instruct","qwen3-coder-plus","qwen3-coder","qwen3-coder-flash"],
     ["qwen3-next-80b-a3b-instruct","qwen3-coder-next"]
   ],
   "qwen-flash": [
     ["qwen3-30b-a3b-instruct-2507","qwen3-30b-a3b"],
     ["qwen3.5-35b-a3b","qwen3.5-flash-02-23"],
-    ["qwen3.6-35b-a3b","qwen3.6-flash"]
+    ["qwen3.6-35b-a3b","qwen3.6-flash"],
+    ["qwen3.7-flash"]
   ],
   "llama-small": [
     ["llama-3-8b-instruct"],
@@ -310,7 +324,8 @@
   ],
   "aion": [
     ["aion-1.0"],
-    ["aion-2.0"]
+    ["aion-2.0"],
+    ["aion-3.0"]
   ],
   "openai-search": [
     ["gpt-4o-search-preview-2025-03-11","gpt-4o-search-preview"],
@@ -381,11 +396,13 @@
   "qwen-vl": [
     ["qwen-vl-plus"],
     ["qwen-vl-max"],
+    ["qwen2-vl-72b-instruct"],
     ["qwen2.5-vl-72b-instruct"],
     ["qwen3-vl-235b-a22b-instruct"]
   ],
   "devstral": [
     ["devstral-medium"],
+    ["devstral-small-2505"],
     ["devstral-2512"]
   ],
   "together-glm": [
@@ -439,10 +456,79 @@
   ],
   "gemma-12b": [
     ["gemma-2-9b-it"],
-    ["gemma-3-12b-it"]
+    ["gemma-3-12b-it"],
+    ["gemma-4-12B-it"]
   ],
   "gemma-edge-4b": [
     ["gemma-3n-e4b-it"],
     ["gemma-4-E4B-it"]
+  ],
+  "kat-coder-pro": [
+    ["kat-coder-pro-v2"],
+    ["kat-coder-pro-v2.5"]
+  ],
+  "google-robotics-er": [
+    ["gemini-robotics-er-1.5-preview"],
+    ["gemini-robotics-er-1.6-preview"],
+    ["gemini-robotics-er-2-preview"]
+  ],
+  "xai-grok-imagine-video": [
+    ["grok-imagine-video"],
+    ["grok-imagine-video-1.5"]
+  ],
+  "cartesia-sonic": [
+    ["sonic"],
+    ["sonic-2"],
+    ["sonic-3"],
+    ["sonic-3.5"]
+  ],
+  "vidu-q": [
+    ["vidu-q1"],
+    ["vidu-q3"]
+  ],
+  "kling-standard": [
+    ["kling-1.6-standard"],
+    ["kling-2.1-standard"]
+  ],
+  "ideogram": [
+    ["ideogram-3.0"],
+    ["ideogram-4.0"]
+  ],
+  "seedream": [
+    ["Seedream-3.0"],
+    ["Seedream-4.0"]
+  ],
+  "pixverse": [
+    ["pixverse-v5"],
+    ["pixverse-v5.6"],
+    ["pixverse-v6"]
+  ],
+  "nemotron-asr-streaming": [
+    ["nemotron-3-asr-streaming-0.6b"],
+    ["nemotron-3.5-asr-streaming-0.6b"]
+  ],
+  "happyhorse-t2v": [
+    ["HappyHorse-1.0-T2V","happyhorse-1.0-t2v"],
+    ["happyhorse-1.1-t2v"]
+  ],
+  "happyhorse-i2v": [
+    ["happyhorse-1.0-i2v"],
+    ["happyhorse-1.1-i2v"]
+  ],
+  "happyhorse-r2v": [
+    ["happyhorse-1.0-r2v"],
+    ["happyhorse-1.1-r2v"]
+  ],
+  "rime-arcana": [
+    ["rime-arcana-v2"],
+    ["rime-arcana-v3"]
+  ],
+  "rime-mist": [
+    ["rime-mist-v2"],
+    ["rime-mist-v3"]
+  ],
+  "minimax-speech-turbo": [
+    ["speech-2.6-turbo"],
+    ["speech-2.8-turbo"]
   ]
 }
