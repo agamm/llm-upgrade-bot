@@ -5,15 +5,15 @@
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-LLM%20Upgrade%20Bot-blue?logo=github)](https://github.com/marketplace/actions/llm-upgrade-bot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Hardcoded `gpt-4`, `claude-3-opus`, or `gemini-2.5-pro`? This tool finds them and upgrades to the latest versions -- across **720+ upgrade entries** from 50 model families spanning OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Moonshot, Qwen, MiniMax, and more.
+Hardcoded `gpt-5.5`, `claude-opus-4.7`, or `gemini-3.1-pro-preview-customtools`? This tool finds them and upgrades to the latest versions -- across **720+ upgrade entries** from 50 model families spanning OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Moonshot, Qwen, MiniMax, and more.
 
 ```
 $ llm-upgrade-bot ./src
 
-  src/config.yaml:3  "claude-3-opus"
+  src/config.yaml:3  "claude-opus-4.7"
     -> major: claude-opus-4.7
 
-  src/lib/router.ts:3  "gpt-3.5-turbo"
+  src/lib/router.ts:3  "gpt-5.4-mini"
     -> major: gpt-5.4-mini
 
   Found 2 upgradable models in 2 files
