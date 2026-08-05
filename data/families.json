@@ -241,7 +241,8 @@
     ["qwen3.6-plus"],
     ["qwen3.6-max-preview"],
     ["qwen3.7-max"],
-    ["qwen3.7-plus"]
+    ["qwen3.7-plus"],
+    ["qwen3.8-max"]
   ],
   "qwen-coder": [
     ["qwen-plus-2025-07-28","qwen-plus"],
